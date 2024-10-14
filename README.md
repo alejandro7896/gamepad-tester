@@ -27,7 +27,7 @@ Si no quieres batallar con la instalación manual y prefieres tener todo listo p
 
 
 
-## Para uso y personalización directa
+## Para desarrolladores
 
 Puedes clonar el repositorio y simplemente abrir el archivo `index.html` en tu navegador favorito.
 
