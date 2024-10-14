@@ -33,7 +33,7 @@ Si no quieres batallar con la instalación manual y prefieres tener todo listo p
 Puedes clonar el repositorio y simplemente abrir el archivo `index.html` en tu navegador favorito.
 
 ```bash
-git clone https://github.com/tuusuario/gamepad-tester.git
+git clone https://github.com/alejandro7896/gamepad-tester.git
 cd gamepad-tester
 open index.html
 ```
