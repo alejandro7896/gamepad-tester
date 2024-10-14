@@ -12,7 +12,7 @@ Este es el Gamepad Tester desarrollado y utilizado en **El Taller de Alex** para
 
 ## Uso web
 
-👉 [úsalo directamente desde web a un solo click](https://www.eltallerdealex.com.mx/gamepad_tester)
+👉 [úsalo directamente desde web a un solo click]((https://alejandro7896.github.io/gamepad-tester/))
 
 
 
