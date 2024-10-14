@@ -9,7 +9,25 @@ Este es el Gamepad Tester desarrollado y utilizado en **El Taller de Alex** para
 - Interfaz minimalista y responsiva.
 - Compatible con la mayoría de los gamepads y joysticks que se conectan nativamente a Windows.
 
-## Instalación
+
+## Uso web
+
+👉 [úsalo directamente desde web a un solo click](https://www.eltallerdealex.com.mx/gamepad_tester)
+
+
+
+## ¿Quieres tenerlo en tu PC y no quieres complicarte?
+
+Si no quieres batallar con la instalación manual y prefieres tener todo listo para usar, puedes descargar el **Gamepad Tester** directamente desde nuestra página web:
+
+👉 [Descargar desde El Taller de Alex](https://www.eltallerdealex.com.mx/gamepad_tester)
+
+¡Es totalmente gratis! Solo necesitas registrarte con un correo electrónico válido para obtener acceso.
+
+
+
+
+## Para uso y personalización directa
 
 Puedes clonar el repositorio y simplemente abrir el archivo `index.html` en tu navegador favorito.
 
@@ -18,11 +36,3 @@ git clone https://github.com/tuusuario/gamepad-tester.git
 cd gamepad-tester
 open index.html
 ```
-
-## ¿No quieres complicarte?
-
-Si no quieres batallar con la instalación manual y prefieres tener todo listo para usar, puedes descargar el **Gamepad Tester** directamente desde nuestra página web:
-
-👉 [Descargar desde El Taller de Alex](https://www.eltallerdealex.com.mx/gamepad_tester)
-
-¡Es totalmente gratis! Solo necesitas registrarte con un correo electrónico válido para obtener acceso.
