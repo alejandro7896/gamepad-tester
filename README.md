@@ -4,11 +4,11 @@ Este es el Gamepad Tester desarrollado y utilizado en **El Taller de Alex** para
 
 ## Características
 
-- Detecta y muestra el estado de los botones, joysticks y triggers en tiempo real.
-- Muestra datos de eje y valores de presión de botones.
-- Interfaz minimalista y responsiva.
-- Compatible con la mayoría de los gamepads y joysticks que se conectan nativamente a Windows.
-- Sin molestos anuncios y totalmente optimizado.
+- 🎮 Detecta y muestra el estado de los botones, joysticks y triggers en tiempo real.
+- 📊 Muestra datos de eje y valores de presión de botones.
+- 🖥️ Interfaz minimalista y responsiva.
+- ✅ Compatible con la mayoría de los gamepads y joysticks que se conectan nativamente a Windows.
+- 🚫 Sin molestos anuncios y totalmente optimizado.
 
 
 ## Uso web
@@ -19,7 +19,7 @@ Este es el Gamepad Tester desarrollado y utilizado en **El Taller de Alex** para
 
 ## ¿Quieres tenerlo en tu PC y no quieres complicarte?
 
-Si no quieres batallar con la instalación manual y prefieres tener todo listo para usar, puedes descargar el **Gamepad Tester** directamente desde nuestra página web:
+Si no quieres batallar con la conexión a internet en cada uso, puedes descargar nuestra versión para **Windows** es el mismo código, únicamente empaquetado en un ejecutable .exe:
 
 👉 [Descargar desde El Taller de Alex](https://www.eltallerdealex.com.mx/gamepad_tester)
 
