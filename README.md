@@ -8,11 +8,12 @@ Este es el Gamepad Tester desarrollado y utilizado en **El Taller de Alex** para
 - Muestra datos de eje y valores de presión de botones.
 - Interfaz minimalista y responsiva.
 - Compatible con la mayoría de los gamepads y joysticks que se conectan nativamente a Windows.
+- Sin molestos anuncios y totalmente optimizado.
 
 
 ## Uso web
 
-👉 [úsalo directamente desde web a un solo click](https://alejandro7896.github.io/gamepad-tester/)
+👉 [Usalo directamente desde web a un solo click](https://alejandro7896.github.io/gamepad-tester/)
 
 
 
