@@ -13,13 +13,13 @@
 
 <!-- SEO Tags -->
  <title>Gamepad Tester WEB por El Taller de Alex</title>
- <meta name="description" content="Prueba tus controles y dispositivos de entrada con el Gamepad Tester de El Taller de Alex. Verifica el estado de los botones, joysticks y triggers en tiempo real. SIN ANUNCIOS">
+ <meta name="description" content="Prueba tus controles y dispositivos de entrada con el Gamepad Tester de El Taller de Alex SIN ANUNCIOS. Verifica el estado de los botones, joysticks y triggers en tiempo real. SIN ANUNCIOS">
  <meta name="keywords" content="Gamepad Tester, probar control, verificar gamepad, botones de control, Joysticks, dispositivos de entrada, El Taller de Alex, control Xbox, control PS4, control PS5, control gaming, herramientas para gamers">
  <meta name="author" content="El Taller de Alex">
 
  <!-- Open Graph / Facebook -->
  <meta property="og:title" content="Gamepad Tester - El Taller de Alex">
- <meta property="og:description" content="Prueba tus controles y dispositivos de entrada con el Gamepad Tester de El Taller de Alex. Verifica el estado de los botones, joysticks y triggers en tiempo real. SIN ANUNCIOS">
+ <meta property="og:description" content="Prueba tus controles y dispositivos de entrada con el Gamepad Tester de El Taller de Alex SIN ANUNCIOS. Verifica el estado de los botones, joysticks y triggers en tiempo real. SIN ANUNCIOS">
  <meta property="og:type" content="website">
  <meta property="og:url" content="https://www.eltallerdealex.com.mx/gamepad_tester">
  <meta property="og:image" content="assets/img/banner.png">
@@ -27,7 +27,7 @@
  <!-- Twitter -->
  <meta name="twitter:card" content="summary_large_image">
  <meta name="twitter:title" content="Gamepad Tester - El Taller de Alex">
- <meta name="twitter:description" content="Prueba tus controles y dispositivos de entrada con el Gamepad Tester de El Taller de Alex. Verifica el estado de los botones, joysticks y triggers en tiempo real. SIN ANUNCIOS">
+ <meta name="twitter:description" content="Prueba tus controles y dispositivos de entrada con el Gamepad Tester de El Taller de Alex SIN ANUNCIOS. Verifica el estado de los botones, joysticks y triggers en tiempo real. SIN ANUNCIOS">
  <meta name="twitter:image" content="assets/img/banner.png">
 
  <!-- Favicon -->
@@ -169,6 +169,11 @@ h1{
             <img src="assets/ico/tiktok.svg" alt="TikTok">
         </a>
 
+        <a href="https://eltallerdealex.com.mx" target="_blank">
+            <img src="assets/ico/web.svg" alt="Web">
+        </a>
+
+
     </div>
 <div style="display:flex;flex-direction:row;gap:2rem;align-items:center;justify-content:center;">
   <h1>EL TALLER DE ALEX</h1>
@@ -179,16 +184,20 @@ h1{
 </div>
 
 
-<div>Frames: <span id="running">41</span></div>
-<div id="gamepads"></div>
+<div>Frames: <span id="running">77</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;" class="instructions">
+
+<p id="conectar">Conecta un gamepad y presiona las teclas para que aparezca en pantalla</p>
 </div>
+<div id="gamepads"></div>
+
 <div style="display:flex;flex-direction:row;margin:0;">
 
 </div>
 <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
   <h3>Powered by:</h3>
   <img style="max-width:6rem;gap:2rem;margin-left:1rem;" src="assets/img/digiclife.png" alt="">
-  <p>eltallerdealex.com.mx</p>
+  <a target="_blank" style="text-decoration:none;color:#226e93;" href="https://eltallerdealex.com.mx"><p>eltallerdealex.com.mx</p></a>
 </div>
 
 <script>
@@ -305,11 +314,14 @@ function addGamepadIfNew(gamepad) {
 
 function handleConnect(e) {
   console.log('connect');
+  document.getElementById("conectar").innerHTML = "¿Tips? verifica que todos los botones se pongan de color negro cuando los presiones y asegurate de que los joysticks estén en el centro si no los estás tocando";
   addGamepadIfNew(e.gamepad);
+
 }
 
 function handleDisconnect(e) {
   console.log('disconnect');
+  document.getElementById("conectar").innerHTML = "Conecta un gamepad y presiona sus teclas para que aparezca en pantalla";
   removeGamepad(e.gamepad);
 }
 
