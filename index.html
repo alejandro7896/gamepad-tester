@@ -187,7 +187,7 @@ h1{
 <div>Frames: <span id="running">77</span></div>
 <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;" class="instructions">
 
-<p id="conectar">Conecta un gamepad y presiona las teclas para que aparezca en pantalla</p>
+<p id="conectar">Conecta un gamepad y presiona sus botones para que aparezca en pantalla</p>
 </div>
 <div id="gamepads"></div>
 
@@ -321,7 +321,7 @@ function handleConnect(e) {
 
 function handleDisconnect(e) {
   console.log('disconnect');
-  document.getElementById("conectar").innerHTML = "Conecta un gamepad y presiona sus teclas para que aparezca en pantalla";
+  document.getElementById("conectar").innerHTML = "Conecta un gamepad y presiona sus botones para que aparezca en pantalla";
   removeGamepad(e.gamepad);
 }
 
