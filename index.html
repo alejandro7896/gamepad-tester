@@ -140,6 +140,17 @@ h1{
 .buttons>div {
   margin: 2px 2px 0 0;
 }
+
+.vib-button{
+  border:none;
+  border-radius:10px;
+
+}
+.vib-button:hover{
+  background:white;
+  color:#226e93;
+}
+
 .buttons{
 
 }
@@ -220,6 +231,7 @@ const controllerTemplate = `
     <div style="background:#556e93a9;" class="info"><div class="label">Mapeo:</div><span class="mapping"></span></div>
     <div style="background:#6e2293;" class="info"><span class="vib"></span></div>
     <div style="background:#935722de;" class="info"><div class="label">Vibración:</div><span class="vibration"></span></div>
+    <div id="test-vib" style="background:#226e23;" class="info"><div class="label">Vibrar</div><span class="test-v"><button class="vib-button" id="v-izq" onclick="vibrateMotor('left')">IZQ</button> <button class="vib-button" id="v-der" onclick="vibrateMotor('right')">DER</button></span></div>
     <div style="background:#226e93;" class="info"><div class="label">Timestamp:</div><span class="timestamp"></span></div>
     </div>
 
@@ -356,6 +368,7 @@ try {
     info['vibtype'].textContent = gamepad.vibrationActuator.constructor.name;
 } catch (error) {
     info['vibtype'].textContent = "SIN VIBRACIÓN";
+    document.getElementById("test-vib").style.display = "none";
 }
 
 
@@ -509,6 +522,63 @@ requestAnimationFrame(process);
       document.getElementById('running').innerText = 'Gamepad Disconnected';
     });
   </script>
+
+
+
+  <script>
+      let gamepadConnected = false;
+
+      // Evento para detectar cuando un gamepad se conecta
+      window.addEventListener("gamepadconnected", (event) => {
+          gamepadConnected = true;
+          console.log("Gamepad conectado:", event.gamepad);
+      });
+
+      // Evento para detectar cuando un gamepad se desconecta
+      window.addEventListener("gamepaddisconnected", () => {
+          gamepadConnected = false;
+          console.log("Gamepad desconectado");
+      });
+
+      // Función para activar la vibración en el motor izquierdo o derecho del gamepad 0
+      function vibrateMotor(motor) {
+          if (gamepadConnected) {
+              const gamepad = navigator.getGamepads()[0];
+
+              if (gamepad && gamepad.vibrationActuator) {
+                  const intensity = 1.0;
+                  const duration = 800;
+
+                  if (motor === 'left') {
+                      gamepad.vibrationActuator.playEffect("dual-rumble", {
+                          startDelay: 0,
+                          duration: duration,
+                          weakMagnitude: 0,
+                          strongMagnitude: intensity
+                      });
+                  } else if (motor === 'right') {
+                      gamepad.vibrationActuator.playEffect("dual-rumble", {
+                          startDelay: 0,
+                          duration: duration,
+                          weakMagnitude: intensity,
+                          strongMagnitude: 0
+                      });
+                  }
+              } else {
+                  console.log("El actuador de vibración no está disponible en este gamepad.");
+              }
+          } else {
+              console.log("No hay ningún gamepad conectado.");
+          }
+      }
+
+  </script>
+
+
+
+
+
+
 
 
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
