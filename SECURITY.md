@@ -6,7 +6,7 @@ Esta sección indica las versiones de nuestro proyecto que están actualmente so
 
 | Versión | Soportada         |
 | ------- | ----------------- |
-| 1.0.2   | :white_check_mark:|
+| 1.1.0   | :white_check_mark:|
 
 
 ## Reportar una Vulnerabilidad
