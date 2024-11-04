@@ -26,7 +26,7 @@ Si no quieres batallar con la conexión a internet en cada uso, puedes descargar
 
 ## Las actualizaciones son publicadas en el canal de Telegram:
 
-👉 [Mantente al corriente de las actualizaciones (Grupo de Telegram)](https://t.me/+kX_lZA2W66piMDJh)
+👉 [Mantente al corriente de las actualizaciones (Grupo de Telegram)](https://t.me/GamepadTester)
 
 ## Para desarrolladores
 
