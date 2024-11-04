@@ -10,7 +10,7 @@ Este es el Gamepad Tester desarrollado y utilizado en **El Taller de Alex** para
 - ✅ Compatible con la mayoría de los gamepads y joysticks que se conectan nativamente a Windows.
 - 🚫 Sin molestos anuncios y totalmente optimizado.
 - 🔊 *Nuevo:* Prueba de vibración por motor individual para ajustes más precisos.
-- 🔊 *Nuevo:* Prueba de vibración por cada gatillo.
+- 🔊 *Nuevo:* Prueba de vibración por cada gatillo. _Disponible únicamente en la versión web_.
 - 🔍 *Nuevo:* Opción de cambiar entre 2 y 3 decimales en los valores, ideal para calibración avanzada o debugging técnico.
 
 ## Uso web
