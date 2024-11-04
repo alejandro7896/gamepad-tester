@@ -309,6 +309,7 @@ const controllerTemplate = `
     <div style="background:#6e2293;" class="info"><span class="vib"></span></div>
     <div style="background:#935722de;" class="info"><div class="label">Vibración:</div><span class="vibration"></span></div>
     <div id="test-vib" style="background:#226e23;" class="info"><div class="label">Vibrar</div><span class="test-v"><button class="vib-button" id="v-izq" onclick="vibrateMotor('left')">IZQ</button> <button class="vib-button" id="v-der" onclick="vibrateMotor('right')">DER</button></span></div>
+    <div id="test-vibG" style="background:#226e23;" class="info"><div class="label">Vibrar Gatillos</div><span class="test-v"><button class="vib-button" id="v-izqG" onclick="vibrateMotorG('left')">IZQ</button> <button class="vib-button" id="v-derG" onclick="vibrateMotorG('right')">DER</button></span></div>
     <div style="background:#226e93;" class="info"><div class="label">Timestamp:</div><span class="timestamp"></span></div>
     </div>
 
@@ -467,6 +468,13 @@ function processController(info) {
 
   try {
     info['vibration'].textContent = info.gamepad.vibrationActuator.effects;
+    if (!info.gamepad.vibrationActuator.effects.includes("trigger-rumble")) {
+    // Selecciona el div que quieres eliminar
+    const div = document.getElementById("test-vibG"); // Cambia "id_del_div" por el ID de tu div
+    if (div) {
+        div.remove();
+    }
+}
 } catch (error) {
     info['vibration'].textContent = "N/A";
 }
@@ -668,6 +676,37 @@ requestAnimationFrame(process);
                           duration: duration,
                           weakMagnitude: intensity,
                           strongMagnitude: 0
+                      });
+                  }
+              } else {
+                  console.log("El actuador de vibración no está disponible en este gamepad.");
+              }
+          } else {
+              console.log("No hay ningún gamepad conectado.");
+          }
+      }
+
+      function vibrateMotorG(motor) {
+          if (gamepadConnected) {
+              const gamepad = navigator.getGamepads()[0];
+
+              if (gamepad && gamepad.vibrationActuator) {
+                  const intensity = 1.0;
+                  const duration = 800;
+
+                  if (motor === 'left') {
+                      gamepad.vibrationActuator.playEffect("trigger-rumble", {
+                          startDelay: 0,
+                          duration: duration,
+                          rightTrigger: 0,
+                          leftTrigger: intensity
+                      });
+                  } else if (motor === 'right') {
+                      gamepad.vibrationActuator.playEffect("trigger-rumble", {
+                          startDelay: 0,
+                          duration: duration,
+                          rightTrigger: intensity,
+                          leftTrigger: 0
                       });
                   }
               } else {
