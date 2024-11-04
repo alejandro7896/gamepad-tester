@@ -25,6 +25,8 @@ Si no quieres batallar con la conexión a internet en cada uso, puedes descargar
 
 ¡Es totalmente gratis! Solo necesitas registrarte con un correo electrónico válido para obtener acceso.
 
+
+Las actualizaciones son publicadas en el canal de Telegram
 👉 [Mantente al corriente de las actualizaciones (Grupo de Telegram)](https://t.me/+kX_lZA2W66piMDJh)
 
 
