@@ -9,24 +9,24 @@ Este es el Gamepad Tester desarrollado y utilizado en **El Taller de Alex** para
 - 🖥️ Interfaz minimalista y responsiva.
 - ✅ Compatible con la mayoría de los gamepads y joysticks que se conectan nativamente a Windows.
 - 🚫 Sin molestos anuncios y totalmente optimizado.
-
+- 🔊 *Nuevo:* Prueba de vibración por motor individual para ajustes más precisos.
+- 🔍 *Nuevo:* Opción de cambiar entre 2 y 3 decimales en los valores, ideal para calibración avanzada o debugging técnico.
 
 ## Uso web
 
 👉 [Usalo directamente desde web a un solo click](https://alejandro7896.github.io/gamepad-tester/)
 
-
-
 ## ¿Quieres tenerlo en tu PC y no quieres complicarte?
 
-Si no quieres batallar con la conexión a internet en cada uso, puedes descargar nuestra versión para **Windows** es el mismo código, únicamente empaquetado en un ejecutable .exe:
+Si no quieres batallar con la conexión a internet en cada uso, puedes descargar nuestra versión para **Windows**. Es el mismo código, únicamente empaquetado en un ejecutable .exe:
 
 👉 [Descargar desde El Taller de Alex](https://www.eltallerdealex.com.mx/gamepad_tester)
 
 ¡Es totalmente gratis! Solo necesitas registrarte con un correo electrónico válido para obtener acceso.
 
+## Las actualizaciones son publicadas en el canal de Telegram:
 
-
+👉 [Mantente al corriente de las actualizaciones (Grupo de Telegram)](https://t.me/GamepadTester)
 
 ## Para desarrolladores
 
