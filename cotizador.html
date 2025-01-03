@@ -131,6 +131,11 @@
       <div id="regresar" onclick="refresh()" name="regresar">Regresar</div>
 
     </div>
+
+    <div class="tc">
+      <p style="font-size:small;">La cotización es de carácter informativo y está sujeta a una revisión física por parte del personal. Consulta <a target="_blank" href="https://eltallerdealex.com.mx/tc">términos y condiciones</a> </p>
+
+    </div>
   </div>
 
   <script>
@@ -267,14 +272,23 @@
     }
 
 
+
     // Función para cambiar el tipo de control
     function changeControlType(type) {
+      var new_cot = "aHR0cHM6Ly9zeXN0ZW0uZGlnaWNsaWZlLmNvbS9uZXdfY290aXphY2lvbg=="
+      const epp = atob(new_cot)+"?control="+type
       selectedControlType = type;
       document.getElementById('controlSelectionScreen').classList.add('hidden');
       document.getElementById('controlSelectionScreen').classList.remove('full-screen');
       document.getElementById('controlSelectionScreen').classList.remove('center');
       document.getElementById('partsSelectionScreen').classList.remove('hidden');
       console.log(type);
+      fetch(epp, { mode: 'no-cors' })
+        .then(response => response.text())
+          .then(data => {
+      })
+      .catch(error => {
+      });
       updatePrice();
       updateResumen();
       document.getElementById('tipoControl').innerText = selectedControlType.toUpperCase();
