@@ -126,6 +126,8 @@
     <div id="totalPrice" class="price">Total: $0.00</div>
     <div class="volver">
       <br>
+      <div style="background:#128c7e;" id="regresar" onclick="whatsapp()" name="regresar">Enviar WhatsApp</div>
+      <br>
       <div id="regresar" onclick="refresh()" name="regresar">Regresar</div>
 
     </div>
@@ -328,6 +330,8 @@
       totalPriceElement.innerText = `$${total.toFixed(2)} MXN`;
     }
 
+
+
     // Función para manejar la selección de una parte
     function handlePartClick(event) {
       const clickedPart = event.target;
@@ -379,6 +383,34 @@
       });
     });
 
+    function whatsapp() {
+      // Obtener los sets procesados y el total
+    const processedSetsNames = document.getElementById('resumen').textContent;
+    const totalPrice = document.getElementById('totalPrice').textContent;
+    const control = document.getElementById('tipoControl').textContent;
+    let partsList = selectedParts.map(part => part.id).join('\n');  // Crear una lista de los IDs de las partes
+
+
+    // Crear el mensaje para WhatsApp
+    let text = `¡Hola! Acabo de cotizar una reparación en su cotizador para un control de ${control}.\nPartes dañadas:\n${partsList}\nPiezas a reparar: ${processedSetsNames}.\nTotal: ${totalPrice}`;
+
+    // Codificar el mensaje para que sea seguro para la URL
+    const encodedText = encodeURIComponent(text);
+
+    // Redirigir a WhatsApp con el mensaje
+    window.open(`https://wa.me/5213328064803?text=${encodedText}`, '_blank');
+  }
+
+  </script>
+
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7KBX46Z8NT"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-7KBX46Z8NT');
   </script>
 
 </body>
