@@ -182,6 +182,20 @@ h1{
     height: 0;
 }
 
+#cotizar{
+  border:none;
+  border-radius:1rem;
+  padding-inline:1rem;
+  cursor:pointer;
+  transition: 0.3s ease;
+
+}
+#cotizar:hover{
+  background: gray;
+  color:white;
+
+}
+
 .slider {
     position: absolute;
     cursor: pointer;
@@ -285,6 +299,11 @@ input:checked + .slider:before {
   <div style="display:flex;flex-direction:row;">
 
   </div>
+</div>
+
+<div style="display:flex; flex-direction:row; gap:1rem;" class="">
+  <p>¿Necesitas cotizar una reparación? <strong>prueba nuestro cotizador</strong></p>
+  <button id="cotizar" onclick="cotizador()" type="button" name="button">Abrir cotizador</button>
 </div>
 
 
@@ -450,6 +469,10 @@ document.addEventListener("DOMContentLoaded", function() {
     document.title += " - " + dText;
   }
 });
+
+function cotizador(){
+  window.location.href = "/gamepad-tester/cotizador.html";
+}
 
 function addGamepad(gamepad) {
   //ETA. Se agrega después de el evento Connected
