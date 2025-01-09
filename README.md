@@ -36,5 +36,5 @@ Puedes clonar el repositorio y simplemente abrir el archivo `index.html` en tu n
 ```bash
 git clone https://github.com/alejandro7896/gamepad-tester.git
 cd gamepad-tester
-open index.html
+index.html
 ```
