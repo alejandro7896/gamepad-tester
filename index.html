@@ -324,6 +324,30 @@ input:checked + .slider:before {
 </div>
 <div id="gamepads"></div>
 
+  <iframe id="oscilloscope" src="/osc" width="100%" height="500" frameborder="0" style="overflow: hidden; display: none;"></iframe>
+
+  <!---
+
+Creado por El Taller de Alex - https://eltallerdealex.com.mx
+
+Eres libre de modificar y redistribuir este programa, de manera GRATUITA.
+
+Debes dar el crédito al autor inicial:
+
+Creado por El Taller de Alex - https://eltallerdealex.com.mx
+
+
+Está PROHIBIDO vender este software.
+Está PROHIBIDO rentar este software.
+Está PROHIBIDO cobrar por este software.
+
+Ayuda a que estas herramientas estén al alcance de todos.
+
+Gracias
+
+
+--->
+
 <div style="display:flex;flex-direction:row;margin:0;">
 
 </div>
@@ -371,6 +395,8 @@ let decimalPlaces = 2;
 </script>
 
 <script>
+
+const iframeo = document.getElementById('oscilloscope');
 
 const fudgeFactor = 2;
 const runningElem = document.querySelector('#running');
@@ -487,6 +513,7 @@ function cotizador(){
 
 function addGamepad(gamepad) {
   //ETA. Se agrega después de el evento Connected
+  iframeo.style.display = 'block';
   console.log('add:', gamepad.index);
   const elem = document.createElement('div');
   elem.innerHTML = controllerTemplate;
@@ -536,6 +563,7 @@ function addGamepad(gamepad) {
 
 function removeGamepad(gamepad) {
   //ETA - QUITA EL GAMEPAD DEL DOM
+  iframeo.style.display = 'none';
   const info = gamepadsByIndex[gamepad.index];
   if (info) {
     delete gamepadsByIndex[gamepad.index];
