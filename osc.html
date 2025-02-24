@@ -1,13 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
+
+<html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-  <title>Gamepad Oscilloscope</title>
+  <title>Osciloscopio de axis</title>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     #gamepad-tester {
       text-align: center;
@@ -28,12 +31,20 @@
     body{
       font-family: Lexend,Montserrat;
     }
+    #trk{
+      cursor:pointer;
+      transition: 0.3s ease;
+    }
+    #trk:hover{
+      background:#818181;
+      color:white;
+    }
   </style>
 </head>
 <body>
   <div>
     <h1>Osciloscopio</h1>
-    <button onclick="startTracking()">Comenzar tracking</button>
+    <button id="trk" style="border:none;padding:0.4rem;border-radius:0.5rem;" onclick="startTracking()">Comenzar tracking</button>
     <div style="display:flex; flex-direction:row;" class="axesc">
       <canvas id="gamepad-chart0"></canvas>
       <canvas id="gamepad-chart1"></canvas>
@@ -275,5 +286,18 @@
       gamepadChart3.update();
     }
   </script>
+
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7KBX46Z8NT"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-7KBX46Z8NT');
+  </script>
+
+
+
 </body>
 </html>
