@@ -145,6 +145,41 @@
     const repairPartsContainer = document.getElementById('repairPartsContainer');
     const resumenElement = document.getElementById('resumen');
 
+    const mapeoControles = {
+    "ps": { // Para PlayStation
+        "L1": "L1",
+        "R1": "R1",
+        "L2": "L2",
+        "R2": "R2",
+        "DUp": "Flecha arriba",
+        "DDown": "Flecha abajo",
+        "DLeft": "Flecha izquierda",
+        "DRight": "Flecha derecha",
+        "BTop": "Δ",
+        "BBottom": "X",
+        "BLeft": "■",
+        "BRight": "O",
+        "LMeta": "Options",
+        "RMeta": "Start"
+    },
+    "xbox": { // Para Xbox
+        "L1": "LB",
+        "R1": "RB",
+        "L2": "LT",
+        "R2": "RT",
+        "DUp": "D-Pad arriba",
+        "DDown": "D-Pad abajo",
+        "DLeft": "D-Pad izquierda",
+        "DRight": "D-Pad derecha",
+        "BTop": "Y",
+        "BBottom": "A",
+        "BLeft": "X",
+        "BRight": "B",
+        "LMeta": "Options",
+        "RMeta": "Start"
+    }
+};
+
     // Definir los precios por tipo de control
     const buttonSetsByControl = {
       xbox: {
@@ -398,22 +433,32 @@
     });
 
     function whatsapp() {
-      // Obtener los sets procesados y el total
+    // Obtener los sets procesados y el total
     const processedSetsNames = document.getElementById('resumen').textContent;
     const totalPrice = document.getElementById('totalPrice').textContent;
-    const control = document.getElementById('tipoControl').textContent;
-    let partsList = selectedParts.map(part => part.id).join('\n');  // Crear una lista de los IDs de las partes
+    const control = document.getElementById('tipoControl').textContent.toLowerCase(); // Asegurar minúsculas
 
+    let control_tipo = "xbox";
+    if (control.includes("ps")){
+      control_tipo = "ps";
+    }
+
+    // Seleccionar el mapeo correcto según el control detectado, o un objeto vacío si no está en la lista
+    const mapeo = mapeoControles[control_tipo] || {};
+
+    // Traducir las partes seleccionadas
+    let partsList = selectedParts.map(part => mapeo[part.id] || part.id).join('\n');
 
     // Crear el mensaje para WhatsApp
-    let text = `¡Hola! Acabo de cotizar una reparación en su cotizador para un control de ${control}.\nPartes dañadas:\n${partsList}\nPiezas a reparar: ${processedSetsNames}.\nTotal: ${totalPrice}`;
+    let text = `Control de ${control.toUpperCase()}.\nPartes dañadas:\n${partsList}\nPiezas a reparar: ${processedSetsNames}.\nTotal estimado: ${totalPrice}`;
 
-    // Codificar el mensaje para que sea seguro para la URL
+    // Codificar el mensaje para URL
     const encodedText = encodeURIComponent(text);
 
     // Redirigir a WhatsApp con el mensaje
-    window.open(`https://wa.me/5213328064803?text=${encodedText}`, '_blank');
-  }
+    window.open(`https://system.digiclife.com/wa_GDL?source=COTIZADOR&cotizador=1&cotizador_text=${encodedText}`, '_blank');
+}
+
 
   </script>
 
