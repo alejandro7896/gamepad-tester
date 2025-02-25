@@ -123,6 +123,7 @@
 
     </div>
     <div id="resumen" class="price">Ningún set seleccionado</div>
+    <div style="font-size:small;" id="partes" class="price">.</div>
     <div id="totalPrice" class="price">Total: $0.00</div>
     <div class="volver">
       <br>
@@ -160,7 +161,9 @@
         "BLeft": "■",
         "BRight": "O",
         "LMeta": "Options",
-        "RMeta": "Start"
+        "RMeta": "Start",
+        "RightStick": "JS Derecho",
+        "LeftStick": "JS Izquierdo"
     },
     "xbox": { // Para Xbox
         "L1": "LB",
@@ -176,7 +179,9 @@
         "BLeft": "X",
         "BRight": "B",
         "LMeta": "Options",
-        "RMeta": "Start"
+        "RMeta": "Start",
+        "RightStick": "JS Derecho",
+        "LeftStick": "JS Izquierdo"
     }
 };
 
@@ -299,7 +304,14 @@
 
       // Actualizar el resumen con los nombres de los sets
       const resumenElement = document.getElementById('resumen');
+      const partesd = document.getElementById('partes');
       resumenElement.innerText = modifiedSetNames.join(', ') || 'Ningún set seleccionado';
+      const controld = document.getElementById('tipoControl').textContent.toLowerCase(); // Asegurar minúsculas
+      let control_tipod = "xbox";
+      if (controld.includes("ps")){
+        control_tipod = "ps";
+      }
+      partesd.innerText = selectedParts.map(part => mapeoControles[control_tipod][part.id] || part.id).join(', ') || '.';
     }
 
     function gamepadTester(){
@@ -447,10 +459,10 @@
     const mapeo = mapeoControles[control_tipo] || {};
 
     // Traducir las partes seleccionadas
-    let partsList = selectedParts.map(part => mapeo[part.id] || part.id).join('\n');
+    let partsList = selectedParts.map(part => mapeo[part.id] || part.id).join(', ');
 
     // Crear el mensaje para WhatsApp
-    let text = `Control de ${control.toUpperCase()}.\nPartes dañadas:\n${partsList}\nPiezas a reparar: ${processedSetsNames}.\nTotal estimado: ${totalPrice}`;
+    let text = `Control de *${control.toUpperCase()}*.\nPartes dañadas:\n${partsList}\nPiezas a reparar: ${processedSetsNames}.\nTotal estimado: ${totalPrice}`;
 
     // Codificar el mensaje para URL
     const encodedText = encodeURIComponent(text);
