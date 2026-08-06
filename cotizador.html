@@ -74,6 +74,155 @@
       cursor:pointer;
 
     }
+
+
+    .whatsapp-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+}
+
+.whatsapp-modal.hidden {
+  display: none;
+}
+
+.whatsapp-modal-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.whatsapp-modal-card {
+  position: relative;
+  z-index: 1;
+
+  width: min(460px, 100%);
+  padding: 28px;
+
+  background: white;
+  border-radius: 24px;
+
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+
+.whatsapp-modal-card h2 {
+  margin: 0 30px 8px;
+  font-family: "Lexend", sans-serif;
+  font-size: 1.45rem;
+}
+
+.whatsapp-modal-card p {
+  margin: 0 0 22px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.whatsapp-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+
+  width: 38px;
+  height: 38px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #f1f5f9;
+  color: #334155;
+
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.whatsapp-modal-close:hover {
+  background: #e2e8f0;
+}
+
+.whatsapp-branches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.whatsapp-branch-button {
+  display: grid;
+  gap: 5px;
+
+  padding: 20px 14px;
+
+  border: 2px solid #128c7e;
+  border-radius: 18px;
+
+  background: white;
+  color: #128c7e;
+
+  font-family: "Montserrat", sans-serif;
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.whatsapp-branch-button:hover {
+  transform: translateY(-2px);
+  background: #128c7e;
+  color: white;
+}
+
+.whatsapp-branch-button strong {
+  font-size: 1rem;
+}
+
+.whatsapp-branch-button span {
+  font-size: 0.76rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.whatsapp-cancel-button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+
+  border: none;
+  border-radius: 14px;
+
+  background: #e2e8f0;
+  color: #334155;
+
+  font-family: "Montserrat", sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.whatsapp-cancel-button:hover {
+  background: #cbd5e1;
+}
+
+@media (max-width: 520px) {
+  .whatsapp-modal-card {
+    padding: 24px 18px 18px;
+  }
+
+  .whatsapp-branches {
+    grid-template-columns: 1fr;
+  }
+
+  .whatsapp-modal-card h2 {
+    font-size: 1.2rem;
+  }
+}
   </style>
 </head>
 <body>
@@ -138,6 +287,58 @@
 
     </div>
   </div>
+
+
+              <div id="whatsappModal" class="whatsapp-modal hidden">
+  <div class="whatsapp-modal-overlay" onclick="cerrarWhatsappModal()"></div>
+
+  <div class="whatsapp-modal-card">
+    <button
+      type="button"
+      class="whatsapp-modal-close"
+      onclick="cerrarWhatsappModal()"
+      aria-label="Cerrar"
+    >
+      ×
+    </button>
+
+    <h2>¿A qué sucursal deseas escribir?</h2>
+
+    <p>
+      Selecciona la ciudad donde deseas llevar o enviar tu control.
+    </p>
+
+    <div class="whatsapp-branches">
+      <button
+        type="button"
+        class="whatsapp-branch-button"
+        onclick="abrirWhatsappSucursal('GDL')"
+      >
+        <strong>Guadalajara</strong>
+        <span>Sucursal GDL</span>
+      </button>
+
+      <button
+        type="button"
+        class="whatsapp-branch-button"
+        onclick="abrirWhatsappSucursal('CDMX')"
+      >
+        <strong>Ciudad de México</strong>
+        <span>Sucursal CDMX</span>
+      </button>
+    </div>
+
+    <button
+      type="button"
+      class="whatsapp-cancel-button"
+      onclick="cerrarWhatsappModal()"
+    >
+      Cancelar
+    </button>
+  </div>
+</div>
+
+              
 
   <script>
     let selectedControlType = 'xbox'; // Control por defecto
@@ -444,31 +645,87 @@
       });
     });
 
-    function whatsapp() {
-    // Obtener los sets procesados y el total
-    const processedSetsNames = document.getElementById('resumen').textContent;
-    const totalPrice = document.getElementById('totalPrice').textContent;
-    const control = document.getElementById('tipoControl').textContent.toLowerCase(); // Asegurar minúsculas
+    let whatsappEncodedText = '';
 
-    let control_tipo = "xbox";
-    if (control.includes("ps")){
-      control_tipo = "ps";
-    }
+function whatsapp() {
+  if (selectedParts.length === 0) {
+    alert('Selecciona al menos una parte para reparar.');
+    return;
+  }
 
-    // Seleccionar el mapeo correcto según el control detectado, o un objeto vacío si no está en la lista
-    const mapeo = mapeoControles[control_tipo] || {};
+  const processedSetsNames =
+    document.getElementById('resumen').textContent;
 
-    // Traducir las partes seleccionadas
-    let partsList = selectedParts.map(part => mapeo[part.id] || part.id).join(', ');
+  const totalPrice =
+    document.getElementById('totalPrice').textContent;
 
-    // Crear el mensaje para WhatsApp
-    let text = `Control de *${control.toUpperCase()}*.\nPartes dañadas:\n${partsList}\nPiezas a reparar: ${processedSetsNames}.\nTotal estimado: ${totalPrice}`;
+  const control =
+    document
+      .getElementById('tipoControl')
+      .textContent
+      .toLowerCase();
 
-    // Codificar el mensaje para URL
-    const encodedText = encodeURIComponent(text);
+  let controlTipo = 'xbox';
 
-    // Redirigir a WhatsApp con el mensaje
-    window.open(`https://system.digiclife.com/wa_GDL?source=COTIZADOR&cotizador=1&cotizador_text=${encodedText}`, '_blank');
+  if (control.includes('ps')) {
+    controlTipo = 'ps';
+  }
+
+  const mapeo = mapeoControles[controlTipo] || {};
+
+  const partsList = selectedParts
+    .map(part => mapeo[part.id] || part.id)
+    .join(', ');
+
+  const text =
+    `Hola, realicé una cotización en línea.\n\n` +
+    `Control: *${control.toUpperCase()}*\n` +
+    `Partes dañadas: ${partsList}\n` +
+    `Piezas a reparar: ${processedSetsNames}\n` +
+    `Total estimado: *${totalPrice}*`;
+
+  whatsappEncodedText = encodeURIComponent(text);
+
+  document
+    .getElementById('whatsappModal')
+    .classList
+    .remove('hidden');
+
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarWhatsappModal() {
+  document
+    .getElementById('whatsappModal')
+    .classList
+    .add('hidden');
+
+  document.body.style.overflow = '';
+}
+
+function abrirWhatsappSucursal(sucursal) {
+  const endpoints = {
+    GDL: '/wa_GDL',
+    CDMX: '/wa_CDMX'
+  };
+
+  const endpoint = endpoints[sucursal];
+
+  if (!endpoint) {
+    alert('La sucursal seleccionada no es válida.');
+    return;
+  }
+
+  const url =
+    `https://system.digiclife.com${endpoint}` +
+    `?source=COTIZADOR` +
+    `&cotizador=1` +
+    `&site=${encodeURIComponent(sucursal)}` +
+    `&cotizador_text=${whatsappEncodedText}`;
+
+  window.open(url, '_blank');
+
+  cerrarWhatsappModal();
 }
 
 
