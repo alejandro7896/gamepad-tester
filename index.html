@@ -147,10 +147,22 @@ h1{
   margin: 2px 2px 0 0;
 }
 
-.vib-button{
-  border:none;
-  border-radius:10px;
-
+.vib-button {
+  border: 0;
+  border-radius: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+/* El contenedor de vibración usa clases (ya no los IDs anteriores). */
+.infos .info.test-vib,
+.infos .info.test-vibG {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.test-vib .vib-button,
+.test-vibG .vib-button {
+  border-radius: 12px;
 }
 .vib-button:hover{
   background:white;
@@ -398,16 +410,16 @@ input:checked + .slider:before {
     </p>
 
     <p style="font-size: 1.6em; font-weight: bold; color: #ffe066; margin: 8px 0 20px 0; line-height: 1.3;">
-      🛠️ Aprende diagnóstico, joysticks, botones y mucho más.
+      🎟️ Cupón del instructor: <span style="color:white;">NOVIEMBRE25</span>
     </p>
 
-    <a href="https://www.udemy.com/course/aprende-controles-eltallerdealex/?utm_source=gamepad_tester&amp;utm_medium=web&amp;utm_campaign=noviembre_2026" 
+    <a href="https://www.udemy.com/course/aprende-controles-eltallerdealex/?couponCode=NOVIEMBRE25&amp;utm_source=gamepad_tester&amp;utm_medium=web&amp;utm_campaign=noviembre_2026" 
        style="display: inline-block; width: fit-content; padding: 15px 30px; background-color: #f77f00; color: white; text-decoration: none; font-weight: bold; border-radius: 8px; font-size: 1.2em; box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
       🚀 Ver curso en Udemy
     </a>
 
     <p style="margin-top: 15px; font-size: 0.9em; color: #ffe5d9; line-height: 1.4;">
-      Contenido para principiantes. Consulta el precio vigente directamente en Udemy.
+      El enlace aplica el cupón NOVIEMBRE25. Consulta el precio y la vigencia directamente en Udemy.
     </p>
 
 </div>
@@ -561,7 +573,7 @@ input:checked + .slider:before {
       </article>
     </div>
     <p id="diagnostic-support" class="diag-disclaimer">Las lecturas son orientativas y dependen del navegador y controlador.</p>
-    <p class="diag-disclaimer">El círculo verde delimita una referencia visual del <strong>15% de magnitud radial</strong> desde el centro (√[X²+Y²]). Rojo significa que el stick se movió fuera de esa zona, <strong>no necesariamente que tenga drift</strong>. Para diagnosticarlo, mide el centro con el stick suelto.</p>
+    <p class="diag-disclaimer">El círculo verde delimita una referencia visual del <strong>15% de magnitud radial</strong> desde el centro (√[X²+Y²]). El punto cambia a rojo entre el 15% y el recorrido completo; al llegar al <strong>100% vuelve a verde</strong>. El color representa la posición en vivo, <strong>no un diagnóstico de drift</strong>. Para diagnosticarlo, mide el centro con el stick suelto.</p>
   </div>
 </section>
 
