@@ -69,9 +69,9 @@
       const magnitude = Math.hypot(x, y);
       // Verde al centro y también al completar el recorrido (>=99.5% para tolerar redondeos).
       // La alarma roja sólo se aplica a lecturas intermedias; no diagnostica drift.
-      const fullTravel = !!(point && standard && magnitude >= 0.995);
-      const outside = !!(point && standard &&
-        magnitude > CENTER_LIMIT && !fullTravel);
+      const zone = point && standard ? core.stickZone(magnitude, CENTER_LIMIT) : "unknown";
+      const fullTravel = zone === "full";
+      const outside = zone === "outside";
       card.classList.toggle("diag-outside", outside);
       // El stick llega al borde del SVG sin salir del diagrama cuando X/Y son diagonales.
       const visualScale = magnitude > 1 ? 1 / magnitude : 1;
