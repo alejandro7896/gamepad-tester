@@ -1,4 +1,7 @@
-/* Interfaz de pruebas guiadas. No transmite las lecturas del control a servidores. */
+/*
+ * Panel visual de diagnóstico de El Taller de Alex.
+ * Lee exclusivamente Gamepad API, sin transmitir mediciones a servidores.
+ */
 (function () {
   "use strict";
   function init() {
@@ -6,26 +9,32 @@
     const panel = document.getElementById("diagnostics-panel");
     if (!core || !panel) return;
 
-    const selector = document.getElementById("diagnostic-gamepad");
-    const support = document.getElementById("diagnostic-support");
+    const CENTER_LIMIT = 0.15;
+    const selector = panel.querySelector("#diagnostic-gamepad");
+    const support = panel.querySelector("#diagnostic-support");
+    const empty = panel.querySelector("#diagnostic-empty");
+    const tests = panel.querySelector("#diagnostic-tests");
+    const buttonsGrid = panel.querySelector("#diagnostic-buttons-grid");
     const sessions = new Map();
-    let lastRender = 0, optionsKey = "";
+    let lastRender = 0;
+    let optionsKey = "";
+    let lastButtonsKey = "";
 
-    const percent = n => (100 * n).toFixed(1) + "%";
-    const format = n => Number.isFinite(n) ? n.toFixed(3) : "N/D";
+    const percent = value => (Math.max(0, Number(value) || 0) * 100).toFixed(1) + "%";
+    const format = value => Number.isFinite(value) ? value.toFixed(3) : "—";
     const gamepads = () => typeof navigator.getGamepads === "function"
       ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
     const activePad = () => typeof window.getActiveGamepad === "function"
       ? window.getActiveGamepad() : gamepads()[0] || null;
-
+    const find = selector => panel.querySelector(selector);
     function sessionFor(pad) {
-      const existing = sessions.get(pad.index);
-      if (!existing || existing.deviceId !== pad.id) {
+      const old = sessions.get(pad.index);
+      if (!old || old.deviceId !== pad.id) {
         const state = core.createState(pad);
         sessions.set(pad.index, state);
         return state;
       }
-      return existing;
+      return old;
     }
     function syncDevices() {
       const pads = gamepads();
@@ -35,8 +44,8 @@
         selector.replaceChildren();
         if (!pads.length) {
           const opt = document.createElement("option");
-          opt.textContent = "Sin controles conectados";
           opt.value = "";
+          opt.textContent = "Sin controles";
           selector.appendChild(opt);
         } else {
           pads.forEach(pad => {
@@ -52,95 +61,160 @@
       selector.disabled = !pad;
       return pad;
     }
-    function stickDescription(state, side) {
+    function updateStick(side, pad, state, standard, now) {
+      const card = find('[data-stick-side="' + side + '"]');
+      const point = core.axisPair(pad, side);
+      const x = point && standard ? point.x : 0;
+      const y = point && standard ? point.y : 0;
+      const magnitude = Math.hypot(x, y);
+      const outside = !!(point && standard && magnitude > CENTER_LIMIT);
+      card.classList.toggle("diag-outside", outside);
+      // El stick llega al borde del SVG sin salir del diagrama cuando X/Y son diagonales.
+      const visualScale = magnitude > 1 ? 1 / magnitude : 1;
+      const px = 110 + x * 91 * visualScale;
+      const py = 110 + y * 91 * visualScale;
+      find('[data-stick-point="' + side + '"]').setAttribute("cx", px.toFixed(2));
+      find('[data-stick-point="' + side + '"]').setAttribute("cy", py.toFixed(2));
+      find('[data-stick-vector="' + side + '"]').setAttribute("x2", px.toFixed(2));
+      find('[data-stick-vector="' + side + '"]').setAttribute("y2", py.toFixed(2));
+      find('[data-stick-offset="' + side + '"]').textContent =
+        standard && point ? percent(magnitude) : "—";
+      const status = find('[data-stick-status="' + side + '"]');
+      status.textContent = !standard ? "Mapeo no compatible" :
+        outside ? "Fuera del 15%" : "Dentro del 15%";
+      find('[data-stick-x="' + side + '"]').textContent = standard ? format(x) : "—";
+      find('[data-stick-y="' + side + '"]').textContent = standard ? format(y) : "—";
+
       const record = state.sticks[side];
       const task = state.tasks[side];
-      const lines = [];
-      if (task?.type === "center") {
-        lines.push("Midiendo reposo (suelta el joystick)... " +
-          Math.max(0, Math.ceil((2000 - (performance.now() - task.started)) / 1000)) + " s");
-      } else if (record.center) {
-        lines.push("Centro X " + format(record.center.x) + ", Y " + format(record.center.y) +
-          " · desplazamiento " + percent(record.center.offset) +
-          " · ruido " + percent(record.center.jitter) +
-          " · máximo observado " + percent(record.center.maxOffset));
-        if (record.center.maxOffset > 0.5) {
-          lines.push("Hubo movimientos grandes durante el reposo; repite la prueba sin tocar el stick.");
+      find('[data-stick-center="' + side + '"]').textContent =
+        record.center ? percent(record.center.offset) : "—";
+      find('[data-stick-noise="' + side + '"]').textContent =
+        record.center ? percent(record.center.jitter) : "—";
+      const ret = find('[data-stick-return="' + side + '"]');
+      ret.textContent = !record.returnResult ? "—" :
+        record.returnResult.reachedCenter
+          ? percent(record.returnResult.offset) : "Sin retorno";
+      const hint = find('[data-stick-hint="' + side + '"]');
+      if (!standard) {
+        hint.textContent = "Las mediciones requieren un control con mapeo estándar.";
+      } else if (task?.type === "center") {
+        const remaining = Math.max(0, Math.ceil((2000 - (now - task.started)) / 1000));
+        hint.textContent = "Midiendo centro, no toques el joystick · " + remaining + " s";
+      } else if (task?.type === "return") {
+        hint.textContent = task.phase === "move"
+          ? "Llévalo al 70% del recorrido para iniciar."
+          : "Suéltalo y déjalo volver al centro.";
+      } else if (task?.type === "travel") {
+        hint.textContent = "Gira el joystick en todas direcciones y pulsa Finalizar.";
+      } else if (record.center && record.center.maxOffset > 0.5) {
+        hint.textContent = "Detectamos movimiento durante la prueba de reposo. Repítela.";
+      } else if (record.returnResult && !record.returnResult.reachedCenter) {
+        hint.textContent = "No observamos el retorno en 15 s; repite la prueba.";
+      } else {
+        hint.textContent = "Zona verde = referencia visual. Medir centro = prueba de drift en reposo.";
+      }
+
+      const travelPanel = find('[data-stick-travel="' + side + '"]');
+      const travel = record.travelResult;
+      if (!travel) {
+        travelPanel.hidden = true;
+      } else {
+        travelPanel.hidden = false;
+        const directions = [["Izquierda", "left"], ["Derecha", "right"],
+          ["Arriba", "up"], ["Abajo", "down"]];
+        for (const [label, key] of directions) {
+          let row = travelPanel.querySelector('[data-direction="' + key + '"]');
+          if (!row) {
+            row = document.createElement("div");
+            row.className = "diag-travel-row";
+            row.dataset.direction = key;
+            const name = document.createElement("span");
+            name.textContent = label;
+            const bar = document.createElement("div");
+            bar.className = "diag-progress";
+            bar.appendChild(document.createElement("span"));
+            const value = document.createElement("b");
+            row.append(name, bar, value);
+            travelPanel.appendChild(row);
+          }
+          row.querySelector(".diag-progress > span").style.width =
+            Math.min(100, Math.max(0, travel[key] * 100)) + "%";
+          row.querySelector("b").textContent = percent(travel[key]);
         }
-      } else {
-        lines.push("Centro: sin medir. Suelta el joystick durante la prueba de 2 segundos.");
       }
-      if (task?.type === "return") {
-        lines.push(task.phase === "move"
-          ? "Retorno: mueve el joystick hasta aproximadamente el 70% del recorrido."
-          : "Retorno: suéltalo y espera 0,5 segundos en la zona central.");
-      } else if (record.returnResult) {
-        lines.push(record.returnResult.reachedCenter
-          ? "Retorno: zona central alcanzada; desplazamiento final " +
-            percent(record.returnResult.offset) + "."
-          : "Retorno: no se observó un regreso sostenido a la zona central (30%) en 15 s.");
-      } else {
-        lines.push("Retorno: sin medir.");
-      }
-      if (task?.type === "travel") {
-        lines.push("Recorrido: mueve el joystick en todas las direcciones; pulsa Finalizar.");
-      } else if (record.travelResult) {
-        const p = record.travelResult;
-        lines.push("Recorrido máximo — izquierda " + percent(p.left) +
-          " · derecha " + percent(p.right) + " · arriba " + percent(p.up) +
-          " · abajo " + percent(p.down));
-      } else {
-        lines.push("Recorrido: sin medir.");
-      }
-      return lines.join("\n");
     }
-    function render(pad, state) {
+    function updateTriggers(pad, state, standard) {
+      const trigger = state.triggers;
+      [0, 1].forEach((position) => {
+        const instant = standard ? Math.max(0, Math.min(1, Number(pad.buttons[6 + position]?.value) || 0)) : 0;
+        const max = trigger ? trigger.peaks[position] : instant;
+        find('[data-trigger-fill="' + position + '"]').style.width = instant * 100 + "%";
+        find('[data-trigger-max="' + position + '"]').textContent = standard ? percent(max) : "—";
+      });
+      find("#diagnostic-triggers-result").textContent = !standard
+        ? "Los gatillos requieren mapeo estándar."
+        : !trigger ? "Presiona iniciar para registrar el máximo."
+        : trigger.active ? "Midiendo recorrido… pulsa Finalizar para guardar."
+        : "Medición finalizada · LT " + percent(trigger.peaks[0]) +
+          " / RT " + percent(trigger.peaks[1]);
+    }
+    function updateButtons(pad, state) {
+      const data = state.buttons;
+      const key = pad.index + ":" + pad.id + ":" + pad.buttons.length;
+      if (key !== lastButtonsKey) {
+        lastButtonsKey = key;
+        buttonsGrid.replaceChildren();
+        pad.buttons.forEach((_, i) => {
+          const chip = document.createElement("span");
+          chip.className = "diag-button-chip";
+          chip.dataset.buttonIndex = String(i);
+          chip.textContent = core.buttonLabel(pad, i);
+          buttonsGrid.appendChild(chip);
+        });
+      }
+      const count = data ? data.detected.filter(Boolean).length : 0;
+      const total = pad.buttons.length;
+      find("[data-buttons-count]").textContent = count + "/" + total;
+      find("[data-button-progress]").style.width = (total ? count / total * 100 : 0) + "%";
+      buttonsGrid.querySelectorAll("[data-button-index]").forEach(chip => {
+        const i = Number(chip.dataset.buttonIndex);
+        chip.classList.toggle("diag-detected", !!data?.detected[i]);
+      });
+      find("#diagnostic-buttons-result").textContent = !data
+        ? "Presiona iniciar para comprobar todos los botones."
+        : count === total ? "Todos los botones expuestos respondieron."
+        : "Los botones verdes ya fueron detectados.";
+    }
+    function render(pad, state, now) {
       const standard = core.supportsStandardMapping(pad);
-      support.textContent = standard
-        ? "Mapeo estándar detectado. Las pruebas describen lecturas de la Gamepad API, no certifican el estado físico."
-        : "Sin mapeo estándar completo: puedes ver botones y ejes en bruto, pero las pruebas guiadas de sticks y gatillos requieren al menos 4 ejes y 16 botones con mapping=standard.";
       panel.querySelectorAll("[data-diagnostic-action]").forEach(button => {
         const action = button.dataset.diagnosticAction;
         const side = button.dataset.side;
         const task = state.tasks[side];
         button.disabled = !standard && action !== "buttons";
         if (action === "travel") {
-          button.textContent = task?.type === "travel" ? "Finalizar recorrido" : "Medir recorrido";
+          button.textContent = task?.type === "travel" ? "Finalizar recorrido" : "Recorrido";
         } else if (action === "triggers") {
-          button.textContent = state.triggers?.active ? "Finalizar gatillos" : "Medir gatillos";
-          button.disabled = !standard;
+          button.textContent = state.triggers?.active ? "Finalizar prueba" : "Iniciar prueba";
         } else if (action === "buttons") {
-          button.textContent = state.buttons?.active ? "Reiniciar botones" : "Probar todos los botones";
+          button.textContent = state.buttons?.active ? "Reiniciar prueba" : "Iniciar prueba";
         }
       });
-      for (const side of ["left", "right"]) {
-        panel.querySelector('[data-stick-result="' + side + '"]').textContent =
-          standard ? stickDescription(state, side) : "No disponible para este mapeo.";
-      }
-      const trigger = state.triggers;
-      panel.querySelector("#diagnostic-triggers-result").textContent = trigger
-        ? "Máximo LT/L2: " + percent(trigger.peaks[0]) + " · RT/R2: " +
-          percent(trigger.peaks[1]) + " · mínimo observado LT/RT: " +
-          percent(trigger.minima[0]) + " / " + percent(trigger.minima[1]) +
-          (trigger.active ? "\nPresiona ambos gatillos de 0 a 100% y finaliza." : "\nMedición finalizada.")
-        : "Sin medir. Presiona ambos gatillos hasta el fondo durante la prueba.";
-      const buttons = state.buttons;
-      const total = pad.buttons.length;
-      const marked = buttons ? buttons.detected.filter(Boolean).length : 0;
-      const missing = buttons ? buttons.detected
-        .map((done, i) => done ? null : core.buttonLabel(pad, i)).filter(Boolean) : [];
-      panel.querySelector("#diagnostic-buttons-result").textContent = buttons
-        ? marked + "/" + total + " botones observados. " +
-          (marked === total ? "Todos se activaron." : "Pendientes: " + missing.join(", "))
-        : "Sin medir. El test registra cada botón que se active al menos una vez.";
+      for (const side of ["left", "right"]) updateStick(side, pad, state, standard, now);
+      updateTriggers(pad, state, standard);
+      updateButtons(pad, state);
+      support.textContent = standard
+        ? "Mapeo estándar detectado. Datos obtenidos del navegador."
+        : "Mapeo no estándar: visualización de ejes y prueba de gatillos no disponibles; botones genéricos disponibles.";
     }
     selector.addEventListener("change", () => {
-      if (typeof window.setActiveGamepadIndex === "function") {
+      if (selector.value !== "" && typeof window.setActiveGamepadIndex === "function") {
         window.setActiveGamepadIndex(Number(selector.value));
       }
     });
-    panel.addEventListener("click", e => {
-      const button = e.target.closest("[data-diagnostic-action]");
+    panel.addEventListener("click", event => {
+      const button = event.target.closest("[data-diagnostic-action]");
       if (!button) return;
       const pad = activePad();
       if (!pad) return;
@@ -149,7 +223,7 @@
       const action = button.dataset.diagnosticAction;
       const now = performance.now();
       if (action === "buttons") core.startButtons(state, pad);
-      if (action === "triggers") {
+      if (action === "triggers" && core.supportsStandardMapping(pad)) {
         if (state.triggers?.active) core.stopTriggers(state);
         else core.startTriggers(state);
       }
@@ -161,24 +235,25 @@
           else core.startTravel(state, side, now);
         }
       }
-      render(pad, state);
+      render(pad, state, now);
     });
-
     function tick(now) {
       requestAnimationFrame(tick);
-      if (document.hidden || now - lastRender < 70) return;
+      if (document.hidden || now - lastRender < 50) return;
       lastRender = now;
       const pad = syncDevices();
-      const hasPad = Boolean(pad);
-      panel.querySelector("#diagnostic-empty").hidden = hasPad;
-      panel.querySelector("#diagnostic-tests").hidden = !hasPad;
+      empty.hidden = !!pad;
+      tests.hidden = !pad;
       if (!pad) return;
       const state = sessionFor(pad);
       core.update(state, pad, now);
-      render(pad, state);
+      render(pad, state, now);
     }
     requestAnimationFrame(tick);
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();

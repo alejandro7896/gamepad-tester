@@ -251,6 +251,69 @@ input:checked + .slider:before {
 .diag-result { white-space: pre-line; overflow-wrap: anywhere; font-size: .9rem; line-height: 1.55; }
 .diag-note { font-size: .83rem; color: #526774; line-height: 1.5; }
 @media(max-width:600px) { .diagnostic-panel { padding: 12px; } .head, .infos { flex-wrap: wrap; } .banner { max-height: none; } }
+
+/* El panel está al final del tester y las mediciones se leen visualmente. */
+.diagnostic-panel { color:#183245; background:linear-gradient(145deg,#f5faff,#edf5fa); margin:28px auto 30px; padding:clamp(15px,3vw,30px); border:1px solid #c5deeb; border-radius:22px; max-width:1200px; box-shadow:0 10px 34px rgba(34,110,147,.09); }
+.diagnostic-panel .diag-heading { display:flex; gap:18px; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+.diagnostic-panel h2 { font-family:Fredoka, sans-serif; color:#226e93; margin:4px 0 0; font-size:clamp(1.5rem,3vw,2.2rem); }
+.diag-eyebrow { font-size:.7rem; color:#537991; letter-spacing:.14em; font-weight:800; }
+.diag-subtitle { margin:5px 0; color:#4f6877; font-size:.9rem; }
+.diag-threshold-tag { border-radius:999px; background:#e1f2e6; color:#146c41; padding:8px 13px; font-weight:800; font-size:.78rem; }
+.diagnostic-panel .diag-device-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:15px 0; }
+.diag-device-row label { margin:0; font-size:.87rem; white-space:nowrap; }
+.diag-device-row select { flex:1; max-width:550px; min-width:180px; }
+.diag-empty { text-align:center; padding:28px 10px; background:#fff; border-radius:14px; }
+.diag-empty-icon { font-size:2.5rem; }
+.diag-legend { display:flex; flex-wrap:wrap; gap:15px; font-size:.77rem; color:#547080; padding:4px 0 16px; }
+.diag-legend-item { display:inline-flex; align-items:center; gap:6px; }
+.diag-dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
+.diag-dot-green { background:#17a65a; }.diag-dot-red { background:#dc3c45; }.diag-dot-neutral { background:#226e93; }
+.diagnostic-panel .diag-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.diagnostic-panel .diag-card { min-width:0; border:1px solid #d5e5ee; box-shadow:0 1px 6px rgba(0,0,0,.025); border-radius:16px; padding:clamp(13px,2vw,18px); }
+.diag-card-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+.diagnostic-panel .diag-card h3 { font-family:Montserrat,sans-serif; font-size:1rem; margin:0; color:#1d4255; }
+.diag-live-tag,.diag-card-icon { font-size:.65rem; font-weight:800; letter-spacing:.04em; color:#227a62; background:#e2f5eb; border-radius:40px; padding:5px 7px; white-space:nowrap; }
+.diag-stick-visual { display:flex; flex-wrap:wrap; justify-content:space-evenly; align-items:center; gap:8px; margin:8px 0; }
+.diag-stick-map { width:min(48%,228px); min-width:145px; height:auto; overflow:visible; flex:0 1 215px; }
+.diag-map-bg { fill:#f7fbfd; }.diag-map-ring { fill:none; stroke:#8caebb; stroke-width:1.5; }.diag-map-line { stroke:#cbdee8; stroke-width:1; stroke-dasharray:3 4; }
+.diag-map-safe { fill:rgba(23,166,90,.15); stroke:#18a65b; stroke-width:2; stroke-dasharray:3 3; }
+.diag-map-origin { fill:#7898a5; }.diag-map-vector { stroke:#16a05c; stroke-width:2.5; }.diag-map-point { fill:#1eac65; stroke:#fff; stroke-width:3; filter:drop-shadow(0 2px 3px rgba(0,0,0,.22)); }
+.diag-map-label { font-size:9px; fill:#8096a2; font-family:system-ui,sans-serif; }
+.diag-stick-card.diag-outside .diag-map-point { fill:#dc3c45; }.diag-stick-card.diag-outside .diag-map-vector { stroke:#dc3c45; }
+.diag-live-stats { display:flex; flex-direction:column; gap:5px; align-items:flex-start; }
+.diag-metric-name { color:#587383; font-size:.64rem; font-weight:900; letter-spacing:.08em; }
+.diag-big-number { font-family:Montserrat,sans-serif; font-size:clamp(2rem,4vw,3rem); font-variant-numeric:tabular-nums; color:#169456; line-height:1.1; }
+.diag-stick-card.diag-outside .diag-big-number { color:#cb3941; }
+.diag-status { padding:6px 9px; background:#e3f7ec; color:#156b41; border-radius:8px; font-size:.76rem; font-weight:800; }
+.diag-stick-card.diag-outside .diag-status { background:#fce8e9; color:#a82133; }
+.diag-axis-row { font-size:.75rem; color:#577180; display:grid; grid-template-columns:auto auto auto auto; gap:5px; align-items:center; margin-top:6px; }
+.diag-axis-row b { color:#29495b; font-variant-numeric:tabular-nums; font-size:.78rem; }
+.diagnostic-panel .diag-actions { margin:10px 0; display:flex; flex-wrap:wrap; gap:7px; }
+.diagnostic-panel .diag-actions button { flex:1; min-width:96px; }
+.diag-measurements { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); background:#f5f9fb; border-radius:10px; border:1px solid #e7eff4; }
+.diag-measurements > div { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:10px 3px; text-align:center; }
+.diag-measurements > div+div { border-left:1px solid #dce8ef; }
+.diag-measurements span { font-size:.68rem; color:#657e8a; }
+.diag-measurements strong { font-size:.86rem; color:#22536e; overflow-wrap:anywhere; }
+.diag-hint { font-size:.78rem; color:#617783; line-height:1.4; margin:12px 0 2px; }
+.diag-travel-bars { display:grid; gap:7px; margin-top:12px; }
+.diag-travel-row,.diag-trigger-row { display:grid; grid-template-columns:92px 1fr 48px; align-items:center; gap:8px; font-size:.76rem; }
+.diag-travel-row b,.diag-trigger-row b { text-align:right; font-variant-numeric:tabular-nums; }
+.diag-progress { height:11px; border-radius:999px; overflow:hidden; background:#e4eff3; }
+.diag-progress>span { display:block; height:100%; width:0%; background:linear-gradient(90deg,#17a95d,#42c77b); border-radius:inherit; transition:width .1s linear; }
+.diag-card-instruction { font-size:.78rem; color:#587080; }
+.diag-trigger-row { margin:14px 0; }
+.diag-button-count { display:flex; align-items:baseline; gap:8px; margin-bottom:6px; }
+.diag-button-count strong { font-size:1.35rem; color:#226e93; }
+.diag-button-count span { font-size:.75rem; color:#627d88; }
+.diag-buttons-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(65px,1fr)); gap:7px; margin-top:12px; }
+.diag-button-chip { padding:8px 4px; border-radius:7px; background:#edf3f7; border:1px solid #d9e6ee; color:#5e7886; font-weight:700; text-align:center; font-size:.72rem; overflow-wrap:anywhere; }
+.diag-button-chip.diag-detected { background:#dbf7e6; color:#137143; border-color:#93dfb2; }
+.diag-disclaimer { margin:12px 0 0; color:#607988; font-size:.76rem; line-height:1.45; }
+@media(max-width:800px){.diagnostic-panel .diag-grid{grid-template-columns:1fr}.diag-stick-map{width:55%;}}
+@media(max-width:480px){.diag-measurements span{font-size:.59rem}.diag-measurements strong{font-size:.74rem}.diag-stick-map{width:53%;min-width:140px}.diag-live-stats{min-width:125px}.diag-big-number{font-size:2.2rem}.diag-device-row select{min-width:0;width:100%}}
+@media(prefers-reduced-motion:reduce){.diag-progress>span{transition:none}}
+
 </style>
 
 
@@ -327,24 +390,24 @@ input:checked + .slider:before {
   <div style="flex: 1 1 320px; padding: 25px; display: flex; flex-direction: column; justify-content: center; z-index: 1;">
     
     <h1 style="color: white; font-size: 2.1em; margin: 0 0 10px 0; font-weight: bold; line-height: 1.15;">
-      🔥 Especial de Agosto 2026 🎮
+      🎮 Noviembre 2026: aprende a reparar controles
     </h1>
 
     <p style="font-size: 1.25em; margin: 0 0 10px 0; line-height: 1.4;">
-      Agosto ya comenzó… y reparar controles sigue siendo una habilidad que sí puede dejar dinero.
+      Aprovecha noviembre para aprender a diagnosticar y reparar controles, desde cero y a tu ritmo.
     </p>
 
     <p style="font-size: 1.6em; font-weight: bold; color: #ffe066; margin: 8px 0 20px 0; line-height: 1.3;">
-      💸 Solo $239 MXN con el cupón: <span style="color:#fff;">AGOSTO26</span>
+      🛠️ Aprende diagnóstico, joysticks, botones y mucho más.
     </p>
 
-    <a href="https://system.digiclife.com/redirect?to=CursoUdemyAgosto26&referer=GamepadTester" 
+    <a href="https://www.udemy.com/course/aprende-controles-eltallerdealex/?utm_source=gamepad_tester&amp;utm_medium=web&amp;utm_campaign=noviembre_2026" 
        style="display: inline-block; width: fit-content; padding: 15px 30px; background-color: #f77f00; color: white; text-decoration: none; font-weight: bold; border-radius: 8px; font-size: 1.2em; box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
-      🚀 Empieza hoy
+      🚀 Ver curso en Udemy
     </a>
 
     <p style="margin-top: 15px; font-size: 0.9em; color: #ffe5d9; line-height: 1.4;">
-      Cupón válido durante agosto. Aprender a reparar controles no se va a hacer solo.
+      Contenido para principiantes. Consulta el precio vigente directamente en Udemy.
     </p>
 
 </div>
@@ -373,50 +436,134 @@ input:checked + .slider:before {
 <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;" class="instructions">
 <p style="margin:0;" id="conectar">Conecta un gamepad y presiona sus botones para que aparezca en pantalla</p>
 </div>
-<section id="diagnostics-panel" class="diagnostic-panel" aria-label="Diagnóstico guiado">
-  <h2>Diagnóstico guiado de controles</h2>
-  <p class="diag-note">Prueba el centro, retorno y recorrido de cada joystick, revisa gatillos y confirma botones. Estos resultados no sustituyen una revisión física.</p>
-  <label for="diagnostic-gamepad">Control a examinar</label>
-  <select id="diagnostic-gamepad"><option value="">Sin controles conectados</option></select>
-  <p id="diagnostic-empty">Conecta un control y presiona un botón para iniciar.</p>
-  <div id="diagnostic-tests" hidden>
-    <p class="diag-note" id="diagnostic-support"></p>
-    <div class="diag-grid">
-      <article class="diag-card">
-        <h3>Joystick izquierdo</h3>
-        <div class="diag-actions">
-          <button type="button" data-side="left" data-diagnostic-action="center">Medir reposo (2 s)</button>
-          <button type="button" data-side="left" data-diagnostic-action="return">Medir retorno</button>
-          <button type="button" data-side="left" data-diagnostic-action="travel">Medir recorrido</button>
-        </div>
-        <p class="diag-result" data-stick-result="left" aria-live="polite">Sin medir</p>
-      </article>
-      <article class="diag-card">
-        <h3>Joystick derecho</h3>
-        <div class="diag-actions">
-          <button type="button" data-side="right" data-diagnostic-action="center">Medir reposo (2 s)</button>
-          <button type="button" data-side="right" data-diagnostic-action="return">Medir retorno</button>
-          <button type="button" data-side="right" data-diagnostic-action="travel">Medir recorrido</button>
-        </div>
-        <p class="diag-result" data-stick-result="right" aria-live="polite">Sin medir</p>
-      </article>
-      <article class="diag-card">
-        <h3>Gatillos</h3>
-        <div class="diag-actions"><button type="button" data-diagnostic-action="triggers">Medir gatillos</button></div>
-        <p class="diag-result" id="diagnostic-triggers-result">Sin medir</p>
-      </article>
-      <article class="diag-card">
-        <h3>Prueba de botones</h3>
-        <div class="diag-actions"><button type="button" data-diagnostic-action="buttons">Probar todos los botones</button></div>
-        <p class="diag-result" id="diagnostic-buttons-result">Sin medir</p>
-      </article>
-    </div>
-    <p class="diag-note">Las lecturas dependen del control, controlador y navegador. Un valor fuera de rango no confirma por sí solo una avería física.</p>
-  </div>
-</section>
+
 <div id="gamepads"></div>
 
   <iframe id="oscilloscope" src="osc.html" title="Osciloscopio de gamepad" width="100%" height="500" frameborder="0" style="overflow: hidden; display: none;"></iframe>
+
+<section id="diagnostics-panel" class="diagnostic-panel" aria-labelledby="diag-title">
+  <div class="diag-heading">
+    <div>
+      <span class="diag-eyebrow">GAMEPAD TESTER / LAB</span>
+      <h2 id="diag-title">Diagnóstico visual</h2>
+      <p class="diag-subtitle">Mueve tu control y observa los resultados en tiempo real.</p>
+    </div>
+    <span class="diag-threshold-tag">Zona central: 15%</span>
+  </div>
+  <div class="diag-device-row">
+    <label for="diagnostic-gamepad">Control conectado</label>
+    <select id="diagnostic-gamepad"><option value="">Sin controles conectados</option></select>
+  </div>
+  <div id="diagnostic-empty" class="diag-empty">
+    <span class="diag-empty-icon" aria-hidden="true">🎮</span>
+    <p>Conecta tu control y presiona cualquier botón para comenzar.</p>
+  </div>
+  <div id="diagnostic-tests" hidden>
+    <div class="diag-legend">
+      <span class="diag-legend-item"><i class="diag-dot diag-dot-green"></i>Dentro del 15%</span>
+      <span class="diag-legend-item"><i class="diag-dot diag-dot-red"></i>Fuera del 15%</span>
+      <span class="diag-legend-item"><i class="diag-dot diag-dot-neutral"></i>El color cambia en vivo</span>
+    </div>
+    <div class="diag-grid">
+      <article class="diag-card diag-stick-card" data-stick-side="left">
+        <div class="diag-card-top"><h3>Joystick izquierdo</h3><span class="diag-live-tag">● EN VIVO</span></div>
+        <div class="diag-stick-visual">
+          <svg class="diag-stick-map" viewBox="0 0 220 220" role="img" aria-label="Posición del joystick izquierdo con referencia central del 15%">
+            <circle class="diag-map-bg" cx="110" cy="110" r="91"/>
+            <circle class="diag-map-ring" cx="110" cy="110" r="91"/>
+            <line class="diag-map-line" x1="19" y1="110" x2="201" y2="110"/>
+            <line class="diag-map-line" x1="110" y1="19" x2="110" y2="201"/>
+            <circle class="diag-map-safe" cx="110" cy="110" r="13.65"/>
+            <circle class="diag-map-origin" cx="110" cy="110" r="2"/>
+            <line class="diag-map-vector" data-stick-vector="left" x1="110" y1="110" x2="110" y2="110"/>
+            <circle class="diag-map-point" data-stick-point="left" cx="110" cy="110" r="8"/>
+            <text class="diag-map-label" x="110" y="12" text-anchor="middle">−Y</text>
+            <text class="diag-map-label" x="110" y="217" text-anchor="middle">+Y</text>
+          </svg>
+          <div class="diag-live-stats">
+            <span class="diag-metric-name">DESPLAZAMIENTO</span>
+            <strong data-stick-offset="left" class="diag-big-number">0.0%</strong>
+            <span data-stick-status="left" class="diag-status" role="status">En zona central</span>
+            <div class="diag-axis-row"><span>X</span><b data-stick-x="left">0.000</b><span>Y</span><b data-stick-y="left">0.000</b></div>
+          </div>
+        </div>
+        <div class="diag-actions">
+          <button type="button" data-side="left" data-diagnostic-action="center">Medir centro</button>
+          <button type="button" data-side="left" data-diagnostic-action="return">Retorno</button>
+          <button type="button" data-side="left" data-diagnostic-action="travel">Recorrido</button>
+        </div>
+        <div class="diag-measurements" data-stick-measurements="left">
+          <div><span>Centro medido</span><strong data-stick-center="left">—</strong></div>
+          <div><span>Ruido RMS</span><strong data-stick-noise="left">—</strong></div>
+          <div><span>Retorno</span><strong data-stick-return="left">—</strong></div>
+        </div>
+        <p class="diag-hint" data-stick-hint="left">Pulsa «Medir centro» sin tocar el stick durante 2 segundos.</p>
+        <div class="diag-travel-bars" data-stick-travel="left" hidden></div>
+      </article>
+
+      <article class="diag-card diag-stick-card" data-stick-side="right">
+        <div class="diag-card-top"><h3>Joystick derecho</h3><span class="diag-live-tag">● EN VIVO</span></div>
+        <div class="diag-stick-visual">
+          <svg class="diag-stick-map" viewBox="0 0 220 220" role="img" aria-label="Posición del joystick derecho con referencia central del 15%">
+            <circle class="diag-map-bg" cx="110" cy="110" r="91"/>
+            <circle class="diag-map-ring" cx="110" cy="110" r="91"/>
+            <line class="diag-map-line" x1="19" y1="110" x2="201" y2="110"/>
+            <line class="diag-map-line" x1="110" y1="19" x2="110" y2="201"/>
+            <circle class="diag-map-safe" cx="110" cy="110" r="13.65"/>
+            <circle class="diag-map-origin" cx="110" cy="110" r="2"/>
+            <line class="diag-map-vector" data-stick-vector="right" x1="110" y1="110" x2="110" y2="110"/>
+            <circle class="diag-map-point" data-stick-point="right" cx="110" cy="110" r="8"/>
+            <text class="diag-map-label" x="110" y="12" text-anchor="middle">−Y</text>
+            <text class="diag-map-label" x="110" y="217" text-anchor="middle">+Y</text>
+          </svg>
+          <div class="diag-live-stats">
+            <span class="diag-metric-name">DESPLAZAMIENTO</span>
+            <strong data-stick-offset="right" class="diag-big-number">0.0%</strong>
+            <span data-stick-status="right" class="diag-status" role="status">En zona central</span>
+            <div class="diag-axis-row"><span>X</span><b data-stick-x="right">0.000</b><span>Y</span><b data-stick-y="right">0.000</b></div>
+          </div>
+        </div>
+        <div class="diag-actions">
+          <button type="button" data-side="right" data-diagnostic-action="center">Medir centro</button>
+          <button type="button" data-side="right" data-diagnostic-action="return">Retorno</button>
+          <button type="button" data-side="right" data-diagnostic-action="travel">Recorrido</button>
+        </div>
+        <div class="diag-measurements" data-stick-measurements="right">
+          <div><span>Centro medido</span><strong data-stick-center="right">—</strong></div>
+          <div><span>Ruido RMS</span><strong data-stick-noise="right">—</strong></div>
+          <div><span>Retorno</span><strong data-stick-return="right">—</strong></div>
+        </div>
+        <p class="diag-hint" data-stick-hint="right">Pulsa «Medir centro» sin tocar el stick durante 2 segundos.</p>
+        <div class="diag-travel-bars" data-stick-travel="right" hidden></div>
+      </article>
+    </div>
+    <div class="diag-grid diag-secondary-grid">
+      <article class="diag-card">
+        <div class="diag-card-top"><h3>Gatillos</h3><span class="diag-card-icon" aria-hidden="true">↕</span></div>
+        <p class="diag-card-instruction">Presiona cada gatillo de 0 a 100%.</p>
+        <div class="diag-actions"><button type="button" data-diagnostic-action="triggers">Iniciar prueba</button></div>
+        <div class="diag-trigger-row">
+          <span>LT / L2</span><div class="diag-progress"><span data-trigger-fill="0"></span></div><b data-trigger-max="0">0%</b>
+        </div>
+        <div class="diag-trigger-row">
+          <span>RT / R2</span><div class="diag-progress"><span data-trigger-fill="1"></span></div><b data-trigger-max="1">0%</b>
+        </div>
+        <p id="diagnostic-triggers-result" class="diag-hint">Los máximos aparecerán aquí.</p>
+      </article>
+      <article class="diag-card">
+        <div class="diag-card-top"><h3>Comprobación de botones</h3><span class="diag-card-icon" aria-hidden="true">◉</span></div>
+        <p class="diag-card-instruction">Presiona cada botón. Se iluminará cuando lo detectemos.</p>
+        <div class="diag-actions"><button type="button" data-diagnostic-action="buttons">Iniciar prueba</button></div>
+        <div class="diag-button-count"><strong data-buttons-count>0/0</strong><span>detectados</span></div>
+        <div class="diag-progress"><span data-button-progress></span></div>
+        <div id="diagnostic-buttons-grid" class="diag-buttons-grid" aria-label="Botones comprobados"></div>
+        <p id="diagnostic-buttons-result" class="diag-hint">Inicia la prueba para ver cada botón.</p>
+      </article>
+    </div>
+    <p id="diagnostic-support" class="diag-disclaimer">Las lecturas son orientativas y dependen del navegador y controlador.</p>
+    <p class="diag-disclaimer">El círculo verde delimita una referencia visual del <strong>15% de magnitud radial</strong> desde el centro (√[X²+Y²]). Rojo significa que el stick se movió fuera de esa zona, <strong>no necesariamente que tenga drift</strong>. Para diagnosticarlo, mide el centro con el stick suelto.</p>
+  </div>
+</section>
 
   <!---
 

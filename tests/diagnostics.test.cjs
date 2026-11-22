@@ -109,4 +109,31 @@ test("HTML mantiene scripts válidos y rutas relativas", () => {
   assert.doesNotMatch(index, /id="decimal-switch"/);
   assert.doesNotMatch(index, /id="test-vibG?"/);
   assert.match(index, /src="osc\.html"/);
+  assert.ok(index.indexOf('id="diagnostics-panel"') > index.indexOf('id="oscilloscope"'),
+    "El diagnóstico debe quedar debajo del tester/osciloscopio");
+  assert.match(index, /data-stick-point="left"/);
+  assert.match(index, /data-stick-point="right"/);
+  assert.match(index, /r="13\.65"/); // 15% de los 91 px del círculo SVG
+  assert.match(index, /utm_campaign=noviembre_2026/);
+  assert.doesNotMatch(index, /AGOSTO26/);
+  const ui = fs.readFileSync(path.join(__dirname, "..", "js", "diagnostics-ui.js"), "utf8");
+  assert.doesNotThrow(() => new vm.Script(ui, {filename: "diagnostics-ui.js"}));
+  assert.match(ui, /const CENTER_LIMIT = 0\.15/);
+  assert.match(ui, /classList\.toggle\("diag-outside", outside\)/);
+});
+
+test("el retorno sólo completa dentro del 15% central", () => {
+  const pad = makePad();
+  const state = core.createState(pad);
+  core.startReturn(state, "left", 0);
+  pad.axes[0] = 0.85;
+  core.update(state, pad, 100);
+  pad.axes[0] = 0.20; // Fuera de la zona central del 15%
+  core.update(state, pad, 400);
+  core.update(state, pad, 1000);
+  assert.equal(state.sticks.left.returnResult, null);
+  pad.axes[0] = 0.10;
+  core.update(state, pad, 1200);
+  core.update(state, pad, 1800);
+  assert.equal(state.sticks.left.returnResult.reachedCenter, true);
 });

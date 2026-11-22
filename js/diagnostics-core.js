@@ -116,7 +116,7 @@
       } else if (task.type === "return") {
         if (task.phase === "move" && radius >= 0.7) task.phase = "release";
         if (task.phase === "release") {
-          if (radius <= 0.3) {
+          if (radius <= 0.15) {
             if (!task.settledFrom) task.settledFrom = now;
             task.samples.push(point);
             if (now - task.settledFrom >= 500) {
