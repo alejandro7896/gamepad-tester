@@ -39,10 +39,10 @@
   <script>
   (function () {
     "use strict";
-    // Capturar aproximadamente a 60 Hz. Dibujar las cuatro gráficas sólo a 30 Hz,
-    // con Canvas2D; no reconstruir escalas ni ejecutar Chart.update() por muestra.
-    const SAMPLE_INTERVAL = 1000 / 60;
-    const DRAW_INTERVAL = 1000 / 30;
+    // Muestrear en cada fotograma habitual (60 Hz) y dibujar hasta 60 FPS.
+    // Canvas2D evita recalcular los cuatro gráficos Chart.js por cada muestra.
+    const SAMPLE_INTERVAL = 1000 / 120;
+    const DRAW_INTERVAL = 1000 / 60;
     const HISTORY_SECONDS = 4;
     const MAX_SAMPLES = 300;
     const labels = ["LX", "LY", "RX", "RY"];
@@ -226,7 +226,7 @@
       }
       if (now - lastStatus > 700) {
         lastStatus = now;
-        status.textContent = "Leyendo " + pad.id + " · captura ~60 Hz · dibujo ~30 FPS";
+        status.textContent = "Leyendo " + pad.id + " · captura fluida · dibujo hasta 60 FPS";
       }
     }
     function start() {
