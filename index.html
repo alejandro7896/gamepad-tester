@@ -326,6 +326,33 @@ input:checked + .slider:before {
 @media(max-width:480px){.diag-measurements span{font-size:.59rem}.diag-measurements strong{font-size:.74rem}.diag-stick-map{width:53%;min-width:140px}.diag-live-stats{min-width:125px}.diag-big-number{font-size:2.2rem}.diag-device-row select{min-width:0;width:100%}}
 @media(prefers-reduced-motion:reduce){.diag-progress>span{transition:none}}
 
+
+/* Monitoreo visual de pulsaciones repetidas de la cruceta */
+.diag-dpad-card { margin-top:14px; }
+.diag-dpad-header { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+.diag-dpad-header h3 { color:#1d4255; }
+.diag-dpad-header button { border-radius:9px; padding:8px 12px; background:#226e93; color:#fff; border:0; font:inherit; font-size:.81rem; cursor:pointer; }
+.diag-dpad-header button:disabled { opacity:.5; cursor:not-allowed; }
+.diag-dpad-layout { display:grid; grid-template-columns:minmax(230px,290px) 1fr; gap:20px; align-items:center; margin:15px 0; }
+.diag-dpad-cross { display:grid; grid-template-columns:repeat(3,minmax(65px,1fr)); grid-template-rows:repeat(3,73px); gap:6px; max-width:280px; margin:auto; }
+.diag-dpad-key { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border-radius:13px; border:2px solid #cbdbe2; background:#f1f6f8; color:#597080; transition:background-color .12s,border-color .12s,color .12s; }
+.diag-dpad-key[data-direction="up"] { grid-area:1 / 2; }
+.diag-dpad-key[data-direction="left"] { grid-area:2 / 1; }
+.diag-dpad-key[data-direction="right"] { grid-area:2 / 3; }
+.diag-dpad-key[data-direction="down"] { grid-area:3 / 2; }
+.diag-dpad-key .diag-dpad-arrow { font-size:1.5rem; font-weight:800; line-height:1; }
+.diag-dpad-key .diag-dpad-frequency { font-size:.7rem; font-variant-numeric:tabular-nums; }
+.diag-dpad-key.diag-dpad-pressed { background:#d7edff; border-color:#226e93; color:#15557b; }
+.diag-dpad-key.diag-dpad-alert { background:#ffe0e2; border-color:#d02b40; color:#a21d30; box-shadow:0 0 0 2px rgba(208,43,64,.10); }
+.diag-dpad-list { display:grid; gap:7px; }
+.diag-dpad-row { display:grid; grid-template-columns:minmax(70px,1fr) 92px minmax(64px,auto); gap:8px; align-items:center; font-size:.83rem; background:#f5f9fb; border:1px solid #e1ebf1; border-radius:9px; padding:9px 10px; }
+.diag-dpad-row strong,.diag-dpad-row b { font-variant-numeric:tabular-nums; text-align:right; }
+.diag-dpad-row.diag-dpad-alert { color:#aa2036; background:#ffeced; border-color:#edafb7; }
+.diag-dpad-warning { margin:10px 0 0; padding:12px 14px; border:1px solid #edabb2; background:#fff0f0; color:#9d1e31; border-radius:12px; font-size:.86rem; font-weight:700; line-height:1.4; }
+.diag-dpad-warning[hidden] { display:none; }
+.diag-dpad-note { font-size:.79rem; line-height:1.5; color:#5a7180; }
+@media(max-width:690px) { .diag-dpad-layout { grid-template-columns:1fr; } .diag-dpad-cross { width:100%; } }
+
 </style>
 
 
@@ -410,16 +437,16 @@ input:checked + .slider:before {
     </p>
 
     <p style="font-size: 1.6em; font-weight: bold; color: #ffe066; margin: 8px 0 20px 0; line-height: 1.3;">
-      🎟️ Cupón del instructor: <span style="color:white;">NOVIEMBRE25</span>
+      🎟️ Cupón del instructor: <span style="color:white;">NOVIEMBRE26</span>
     </p>
 
-    <a href="https://www.udemy.com/course/aprende-controles-eltallerdealex/?couponCode=NOVIEMBRE25&amp;utm_source=gamepad_tester&amp;utm_medium=web&amp;utm_campaign=noviembre_2026" 
+    <a href="https://www.udemy.com/course/aprende-controles-eltallerdealex/?couponCode=NOVIEMBRE26&amp;utm_source=gamepad_tester&amp;utm_medium=web&amp;utm_campaign=noviembre_2026" 
        style="display: inline-block; width: fit-content; padding: 15px 30px; background-color: #f77f00; color: white; text-decoration: none; font-weight: bold; border-radius: 8px; font-size: 1.2em; box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
       🚀 Ver curso en Udemy
     </a>
 
     <p style="margin-top: 15px; font-size: 0.9em; color: #ffe5d9; line-height: 1.4;">
-      El enlace aplica el cupón NOVIEMBRE25. Consulta el precio y la vigencia directamente en Udemy.
+      El enlace aplica el cupón NOVIEMBRE26. Consulta el precio y la vigencia directamente en Udemy.
     </p>
 
 </div>
@@ -572,6 +599,33 @@ input:checked + .slider:before {
         <p id="diagnostic-buttons-result" class="diag-hint">Inicia la prueba para ver cada botón.</p>
       </article>
     </div>
+
+    <article class="diag-card diag-dpad-card" id="diagnostic-dpad" aria-labelledby="diagnostic-dpad-title">
+      <div class="diag-dpad-header">
+        <h3 id="diagnostic-dpad-title">Cruceta: detector de pulsaciones repetidas</h3>
+        <button type="button" data-dpad-reset>Reiniciar prueba</button>
+      </div>
+      <p class="diag-card-instruction">Presiona una dirección una sola vez y suéltala. El monitor se activa automáticamente al conectar el control.</p>
+      <div class="diag-dpad-layout">
+        <div class="diag-dpad-cross" role="img" aria-label="Cruceta con indicadores de frecuencia">
+          <div class="diag-dpad-key" data-direction="up"><span class="diag-dpad-arrow">↑</span><span class="diag-dpad-frequency" data-dpad-live="up">0 Hz</span></div>
+          <div class="diag-dpad-key" data-direction="left"><span class="diag-dpad-arrow">←</span><span class="diag-dpad-frequency" data-dpad-live="left">0 Hz</span></div>
+          <div class="diag-dpad-key" data-direction="right"><span class="diag-dpad-arrow">→</span><span class="diag-dpad-frequency" data-dpad-live="right">0 Hz</span></div>
+          <div class="diag-dpad-key" data-direction="down"><span class="diag-dpad-arrow">↓</span><span class="diag-dpad-frequency" data-dpad-live="down">0 Hz</span></div>
+        </div>
+        <div class="diag-dpad-list">
+          <div class="diag-dpad-row" data-dpad-row="up"><span>↑ Arriba</span><strong data-dpad-count="up">0 pulsaciones</strong><b data-dpad-rate="up">0 Hz</b></div>
+          <div class="diag-dpad-row" data-dpad-row="down"><span>↓ Abajo</span><strong data-dpad-count="down">0 pulsaciones</strong><b data-dpad-rate="down">0 Hz</b></div>
+          <div class="diag-dpad-row" data-dpad-row="left"><span>← Izquierda</span><strong data-dpad-count="left">0 pulsaciones</strong><b data-dpad-rate="left">0 Hz</b></div>
+          <div class="diag-dpad-row" data-dpad-row="right"><span>→ Derecha</span><strong data-dpad-count="right">0 pulsaciones</strong><b data-dpad-rate="right">0 Hz</b></div>
+        </div>
+      </div>
+      <div class="diag-dpad-warning" id="diagnostic-dpad-warning" role="status" aria-live="polite" hidden>
+        ⚠ Posible cruceta dañada: <span id="diagnostic-dpad-warning-text"></span>
+      </div>
+      <p class="diag-dpad-note">Se cuentan nuevas pulsaciones (soltar y volver a presionar), no los fotogramas de una pulsación sostenida. Una frecuencia <strong>mayor a 4 Hz</strong> durante al menos 5 pulsaciones en una ventana de 1 segundo activa la alerta. Pulsar deliberadamente muy rápido también puede activarla; no confirma una falla física. Algunas repeticiones pueden ser demasiado rápidas para que el navegador las detecte.</p>
+    </article>
+
     <p id="diagnostic-support" class="diag-disclaimer">Las lecturas son orientativas y dependen del navegador y controlador.</p>
     <p class="diag-disclaimer">El círculo verde delimita una referencia visual del <strong>15% de magnitud radial</strong> desde el centro (√[X²+Y²]). El punto cambia a rojo entre el 15% y el recorrido completo; al llegar al <strong>100% vuelve a verde</strong>. El color representa la posición en vivo, <strong>no un diagnóstico de drift</strong>. Para diagnosticarlo, mide el centro con el stick suelto.</p>
   </div>
