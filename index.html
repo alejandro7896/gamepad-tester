@@ -234,6 +234,23 @@ input:checked + .slider:before {
     user-select: none;
   }
 
+
+/* Diagnóstico guiado: diseño adaptable a móvil y escritorio */
+.infos, .inputs, .axes, .buttons, .banner { flex-wrap: wrap; }
+#gamepads svg { max-width: 100%; }
+.diagnostic-panel { max-width: 1160px; margin: 20px auto; padding: 20px; border: 1px solid #bfd5e2; border-radius: 16px; background: #f6fafc; box-sizing: border-box; }
+.diagnostic-panel h2, .diag-card h3 { color: #226e93; }
+.diagnostic-panel label { font-weight: 600; display: block; margin: 12px 0 6px; }
+.diagnostic-panel select { width: min(100%, 700px); padding: 10px; font: inherit; background: white; border: 1px solid #95b3c3; border-radius: 8px; }
+.diag-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; margin: 16px 0; }
+.diag-card { padding: 15px; border-radius: 12px; border: 1px solid #d5e2e9; background: #fff; }
+.diag-card h3 { margin: 0 0 10px; }
+.diag-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.diag-actions button { background: #226e93; color: #fff; font: inherit; font-size: .84rem; padding: 9px; border-radius: 8px; border: 0; cursor: pointer; }
+.diag-actions button:disabled { background: #9baab1; cursor: not-allowed; }
+.diag-result { white-space: pre-line; overflow-wrap: anywhere; font-size: .9rem; line-height: 1.55; }
+.diag-note { font-size: .83rem; color: #526774; line-height: 1.5; }
+@media(max-width:600px) { .diagnostic-panel { padding: 12px; } .head, .infos { flex-wrap: wrap; } .banner { max-height: none; } }
 </style>
 
 
@@ -352,13 +369,54 @@ input:checked + .slider:before {
 </div>
 
 
-<div style="margin:0;">Frames: <span id="running">77</span></div>
+<div style="margin:0;">Estado: <span id="running">Sin control</span></div>
 <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;" class="instructions">
 <p style="margin:0;" id="conectar">Conecta un gamepad y presiona sus botones para que aparezca en pantalla</p>
 </div>
+<section id="diagnostics-panel" class="diagnostic-panel" aria-label="Diagnóstico guiado">
+  <h2>Diagnóstico guiado de controles</h2>
+  <p class="diag-note">Prueba el centro, retorno y recorrido de cada joystick, revisa gatillos y confirma botones. Estos resultados no sustituyen una revisión física.</p>
+  <label for="diagnostic-gamepad">Control a examinar</label>
+  <select id="diagnostic-gamepad"><option value="">Sin controles conectados</option></select>
+  <p id="diagnostic-empty">Conecta un control y presiona un botón para iniciar.</p>
+  <div id="diagnostic-tests" hidden>
+    <p class="diag-note" id="diagnostic-support"></p>
+    <div class="diag-grid">
+      <article class="diag-card">
+        <h3>Joystick izquierdo</h3>
+        <div class="diag-actions">
+          <button type="button" data-side="left" data-diagnostic-action="center">Medir reposo (2 s)</button>
+          <button type="button" data-side="left" data-diagnostic-action="return">Medir retorno</button>
+          <button type="button" data-side="left" data-diagnostic-action="travel">Medir recorrido</button>
+        </div>
+        <p class="diag-result" data-stick-result="left" aria-live="polite">Sin medir</p>
+      </article>
+      <article class="diag-card">
+        <h3>Joystick derecho</h3>
+        <div class="diag-actions">
+          <button type="button" data-side="right" data-diagnostic-action="center">Medir reposo (2 s)</button>
+          <button type="button" data-side="right" data-diagnostic-action="return">Medir retorno</button>
+          <button type="button" data-side="right" data-diagnostic-action="travel">Medir recorrido</button>
+        </div>
+        <p class="diag-result" data-stick-result="right" aria-live="polite">Sin medir</p>
+      </article>
+      <article class="diag-card">
+        <h3>Gatillos</h3>
+        <div class="diag-actions"><button type="button" data-diagnostic-action="triggers">Medir gatillos</button></div>
+        <p class="diag-result" id="diagnostic-triggers-result">Sin medir</p>
+      </article>
+      <article class="diag-card">
+        <h3>Prueba de botones</h3>
+        <div class="diag-actions"><button type="button" data-diagnostic-action="buttons">Probar todos los botones</button></div>
+        <p class="diag-result" id="diagnostic-buttons-result">Sin medir</p>
+      </article>
+    </div>
+    <p class="diag-note">Las lecturas dependen del control, controlador y navegador. Un valor fuera de rango no confirma por sí solo una avería física.</p>
+  </div>
+</section>
 <div id="gamepads"></div>
 
-  <iframe id="oscilloscope" src="/gamepad-tester/osc.html" width="100%" height="500" frameborder="0" style="overflow: hidden; display: none;"></iframe>
+  <iframe id="oscilloscope" src="osc.html" title="Osciloscopio de gamepad" width="100%" height="500" frameborder="0" style="overflow: hidden; display: none;"></iframe>
 
   <!---
 
@@ -421,10 +479,12 @@ Gracias
 let decimalPlaces = 2;
 
     // Función para alternar entre 2 y 3 decimales//ETA
-    function toggleDecimalPlaces() {
-        decimalPlaces = decimalPlaces === 2 ? 3 : 2;
-        document.getElementById("decimal-label").textContent = decimalPlaces;
-    }
+    function toggleDecimalPlaces(toggle) {
+  decimalPlaces = toggle.checked ? 3 : 2;
+  document.querySelectorAll(".decimal-switch").forEach(input => {
+    input.checked = (decimalPlaces === 3);
+  });
+}
 
 </script>
 
@@ -436,6 +496,27 @@ const fudgeFactor = 2;
 const runningElem = document.querySelector('#running');
 const gamepadsElem = document.querySelector('#gamepads');
 const gamepadsByIndex = {};
+let activeGamepadIndex = null;
+function getActiveGamepad() {
+  if (typeof navigator.getGamepads !== "function") return null;
+  const pads = navigator.getGamepads();
+  if (activeGamepadIndex !== null && pads[activeGamepadIndex]) return pads[activeGamepadIndex];
+  const first = Array.from(pads).find(Boolean) || null;
+  activeGamepadIndex = first ? first.index : null;
+  return first;
+}
+function setActiveGamepadIndex(index) {
+  if (typeof navigator.getGamepads !== "function") return;
+  const pads = navigator.getGamepads();
+  if (!Number.isInteger(index) || !pads[index]) return;
+  activeGamepadIndex = index;
+  const osc = document.getElementById("oscilloscope");
+  if (osc?.contentWindow) {
+    osc.contentWindow.postMessage({type: "gamepad-selection", index}, location.origin);
+  }
+}
+window.getActiveGamepad = getActiveGamepad;
+window.setActiveGamepadIndex = setActiveGamepadIndex;
 const controllerF = "R2FtZXBhZCBUZXN0ZXIgV0VCIHBvciBFbCBUYWxsZXIgZGUgQWxleA=="
 const controllerT = "KEMpIDIwMjQgRWwgVGFsbGVyIGRlIEFsZXg="
 
@@ -447,8 +528,8 @@ const controllerTemplate = `
     <div style="background:#556e93a9;" class="info"><div class="label">Mapeo:</div><span class="mapping"></span></div>
     <div style="background:#6e2293;" class="info"><span class="vib"></span></div>
     <div style="background:#935722de;" class="info"><div class="label">Vibración:</div><span class="vibration"></span></div>
-    <div id="test-vib" style="background:#226e23;" class="info"><div class="label">Vibrar</div><span class="test-v"><button class="vib-button" id="v-izq" onclick="vibrateMotor('left')">IZQ</button> <button class="vib-button" id="v-der" onclick="vibrateMotor('right')">DER</button></span></div>
-    <div id="test-vibG" style="background:#226e23;" class="info"><div class="label">Vibrar Gatillos</div><span class="test-v"><button class="vib-button" id="v-izqG" onclick="vibrateMotorG('left')">IZQ</button> <button class="vib-button" id="v-derG" onclick="vibrateMotorG('right')">DER</button></span></div>
+    <div class="test-vib" style="background:#226e23;" class="info"><div class="label">Vibrar</div><span class="test-v"><button class="vib-button" id="v-izq" onclick="vibrateMotor('left', this.closest('[data-pad-index]').dataset.padIndex)">IZQ</button> <button class="vib-button" id="v-der" onclick="vibrateMotor('right', this.closest('[data-pad-index]').dataset.padIndex)">DER</button></span></div>
+    <div class="test-vibG" style="background:#226e23;" class="info"><div class="label">Vibrar Gatillos</div><span class="test-v"><button class="vib-button" id="v-izqG" onclick="vibrateMotorG('left', this.closest('[data-pad-index]').dataset.padIndex)">IZQ</button> <button class="vib-button" id="v-derG" onclick="vibrateMotorG('right', this.closest('[data-pad-index]').dataset.padIndex)">DER</button></span></div>
     <div style="background:#226e93;" class="info"><div class="label">Timestamp:</div><span class="timestamp"></span></div>
     </div>
 
@@ -484,7 +565,7 @@ const controllerTemplate = `
     <p>Decimales</p>
         <span class="decimal-label">2</span>
         <label class="switch">
-            <input type="checkbox" id="decimal-switch" onclick="toggleDecimalPlaces()" />
+            <input type="checkbox" class="decimal-switch" aria-label="Usar 3 decimales" onclick="toggleDecimalPlaces(this)" />
             <span class="slider"></span>
         </label>
         <span class="decimal-label">3</span>
@@ -519,7 +600,7 @@ const buttonTemplate = `
 const slider = `<div class="switch-container">
     <span class="decimal-label">2</span>
     <label class="switch">
-        <input type="checkbox" id="decimal-switch" onclick="toggleDecimalPlaces()" />
+        <input type="checkbox" class="decimal-switch" aria-label="Usar 3 decimales" onclick="toggleDecimalPlaces(this)" />
         <span class="slider"></span>
     </label>
     <span class="decimal-label">3</span>
@@ -542,7 +623,7 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function cotizador(){
-  window.location.href = "/gamepad-tester/cotizador.html";
+  window.location.href = "cotizador.html";
 }
 
 function addGamepad(gamepad) {
@@ -551,6 +632,7 @@ function addGamepad(gamepad) {
   console.log('add:', gamepad.index);
   const elem = document.createElement('div');
   elem.innerHTML = controllerTemplate;
+  elem.dataset.padIndex = String(gamepad.index);
   const accesskey="RUwgVEFMTEVSIERFIExBTEVY"
   const axesElem = elem.querySelector('.axes');
   const buttonsElem = elem.querySelector('.buttons');
@@ -597,12 +679,13 @@ function addGamepad(gamepad) {
 
 function removeGamepad(gamepad) {
   //ETA - QUITA EL GAMEPAD DEL DOM
-  iframeo.style.display = 'none';
   const info = gamepadsByIndex[gamepad.index];
   if (info) {
     delete gamepadsByIndex[gamepad.index];
     info.elem.parentElement.removeChild(info.elem);
   }
+  if (activeGamepadIndex === gamepad.index) activeGamepadIndex = null;
+  iframeo.style.display = getActiveGamepad() ? 'block' : 'none';
 }
 
 function addGamepadIfNew(gamepad) {
@@ -646,33 +729,26 @@ function processController(info) {
   }
   info['timestamp'].textContent = gamepad['timestamp'].toFixed(2);
 
-  try {
-    info['vibration'].textContent = info.gamepad.vibrationActuator.effects;
-    if (!info.gamepad.vibrationActuator.effects.includes("trigger-rumble")) {
-      //ETA. ¿No hay trigger-rumble en el vibrationActuator? Borra el DIV
-    const div = document.getElementById("test-vibG");
-    if (div) {
-        div.remove();
-    }
-}
-} catch (error) {
-    info['vibration'].textContent = "N/A";
-}
-
-try {
-    info['vibtype'].textContent = gamepad.vibrationActuator.constructor.name;
-} catch (error) {
-  //ETA
-    info['vibtype'].textContent = "SIN VIBRACIÓN";
-    document.getElementById("test-vib").style.display = "none";
-}
-
+  const actuator = gamepad.vibrationActuator ||
+    (gamepad.hapticActuators && gamepad.hapticActuators[0]);
+  const effects = Array.isArray(actuator?.effects) ? actuator.effects : null;
+  info.vibration.textContent = actuator
+    ? (effects ? effects.join(", ") : "Disponible; efectos no publicados") : "N/A";
+  info.vibtype.textContent = actuator ? "Actuador detectado" : "SIN VIBRACIÓN";
+  const vibrationControls = elem.querySelector(".test-vib");
+  if (vibrationControls) vibrationControls.style.display =
+    actuator && typeof actuator.playEffect === "function" ? "" : "none";
+  const triggerControls = elem.querySelector(".test-vibG");
+  if (triggerControls) triggerControls.style.display =
+    effects && effects.includes("trigger-rumble") ? "" : "none";
 
   axes.forEach(({axis, value}, ndx) => {
     const off = ndx * 2;
-    axis.setAttributeNS(null, 'cx', gamepad.axes[off    ] * fudgeFactor);
-    axis.setAttributeNS(null, 'cy', gamepad.axes[off + 1] * fudgeFactor);
-    value.textContent = `${gamepad.axes[off].toFixed(decimalPlaces).padStart(5)},${gamepad.axes[off + 1].toFixed(decimalPlaces).padStart(5)}`;
+    const x = Number.isFinite(gamepad.axes[off]) ? gamepad.axes[off] : 0;
+    const y = Number.isFinite(gamepad.axes[off + 1]) ? gamepad.axes[off + 1] : 0;
+    axis.setAttributeNS(null, "cx", x * fudgeFactor);
+    axis.setAttributeNS(null, "cy", y * fudgeFactor);
+    value.textContent = `${x.toFixed(decimalPlaces)}, ${y.toFixed(decimalPlaces)}`;
   });
   buttons.forEach(({circle, value}, ndx) => {
     const button = gamepad.buttons[ndx];
@@ -698,10 +774,11 @@ window.addEventListener("gamepadconnected", handleConnect);
 window.addEventListener("gamepaddisconnected", handleDisconnect);
 
 function process() {
-  runningElem.textContent = ((performance.now() * 0.001 * 60 | 0) % 100).toString().padStart(2, '0');
+  runningElem.textContent = getActiveGamepad() ? "Conectado" : "Sin control";
   addNewPads();
 
   Object.values(gamepadsByIndex).forEach(processController);
+  updateGamepadDisplay();
   requestAnimationFrame(process);
 }
 requestAnimationFrame(process);
@@ -710,113 +787,39 @@ requestAnimationFrame(process);
 </script>
 
 <script>
-    function updateGamepadDisplay() {
-      const gamepads = navigator.getGamepads();
-      if (!gamepads) return;
-
-      const gamepad = gamepads[0];
-      if (!gamepad) return;
-
-      // JOYSTICKS - ETA
-      const leftStick = document.getElementById('LeftStick');
-      const rightStick = document.getElementById('RightStick');
-
-      leftStick.setAttribute('cx', 112 + gamepad.axes[0] * 10.5);
-      leftStick.setAttribute('cy', 160 + gamepad.axes[1] * 10.5);
-
-      //ETA - COLOR IZQ
-      const fx = Math.max(Math.abs(gamepad.axes[0]),Math.abs(gamepad.axes[1]));
-      leftStick.setAttribute("fill","rgba(0,0,0,"+fx+")");
-
-      rightStick.setAttribute('cx', 278 + gamepad.axes[2] * 10.5);
-      rightStick.setAttribute('cy', 238 + gamepad.axes[3] * 10.5);
-
-      //ETA - COLOR DER
-      const fD = Math.max(Math.abs(gamepad.axes[2]),Math.abs(gamepad.axes[3]));
-      rightStick.setAttribute("fill","rgba(0,0,0,"+fD+")");
-
-      //ETA - GATILLOS
-      const LT = document.getElementById('L2');
-      LTv = gamepad.buttons[6].value
-      LT.setAttribute('fill',"rgba(1,1,1,"+LTv+")");
-
-      const RT = document.getElementById('R2');
-      RTv = gamepad.buttons[7].value
-      RT.setAttribute('fill',"rgba(1,1,1,"+RTv+")");
-
-      //ETA - BUMPERS
-      const LB = document.getElementById('L1');
-      LBv = gamepad.buttons[4].value
-      LB.setAttribute('fill',"rgba(1,1,1,"+LBv+")");
-
-      const RB = document.getElementById('R1');
-      RBv = gamepad.buttons[5].value
-      RB.setAttribute('fill',"rgba(1,1,1,"+RBv+")");
-
-
-      //ETA - CRUZ DPAD
-      const Up = document.getElementById('DUp');
-      Upv = gamepad.buttons[12].value
-      Up.setAttribute('fill',"rgba(1,1,1,"+Upv+")");
-
-      const Down = document.getElementById('DDown');
-      Downv = gamepad.buttons[13].value
-      Down.setAttribute('fill',"rgba(1,1,1,"+Downv+")");
-
-      const DLeft = document.getElementById('DLeft');
-      DLeftv = gamepad.buttons[14].value
-      DLeft.setAttribute('fill',"rgba(1,1,1,"+DLeftv+")");
-
-      const Dright = document.getElementById('DRight');
-      Drightv = gamepad.buttons[15].value
-      Dright.setAttribute('fill',"rgba(1,1,1,"+Drightv+")");
-
-
-      //ETA - BOTONES
-      const BUp = document.getElementById('BTop');
-      BUpv = gamepad.buttons[3].value
-      BUp.setAttribute('fill',"rgba(1,1,1,"+BUpv+")");
-
-      const BDown = document.getElementById('BBottom');
-      BDownv = gamepad.buttons[0].value
-      BDown.setAttribute('fill',"rgba(1,1,1,"+BDownv+")");
-
-      const BLeft = document.getElementById('BLeft');
-      BLeftv = gamepad.buttons[2].value
-      BLeft.setAttribute('fill',"rgba(1,1,1,"+BLeftv+")");
-
-      const Bright = document.getElementById('BRight');
-      Brightv = gamepad.buttons[1].value
-      Bright.setAttribute('fill',"rgba(1,1,1,"+Brightv+")");
-
-
-
-      //ETA - BOTONES  START OPTIONS
-      const Lmeta = document.getElementById('LMeta');
-      Lmetav = gamepad.buttons[8].value
-      Lmeta.setAttribute('fill',"rgba(1,1,1,"+Lmetav+")");
-
-      const Rmeta = document.getElementById('RMeta');
-      Rmetav = gamepad.buttons[9].value
-      Rmeta.setAttribute('fill',"rgba(1,1,1,"+Rmetav+")");
-
-
-    }
-
-    function gameLoop() {
-      updateGamepadDisplay();
-      requestAnimationFrame(gameLoop);
-    }
-
-    window.addEventListener('gamepadconnected', function() {
-      document.getElementById('running').innerText = 'Gamepad Connected';
-      gamepadConnected = true;
-      gameLoop();
+  // El ciclo principal invoca esta función una sola vez por fotograma.
+  function updateGamepadDisplay() {
+    const pad = getActiveGamepad();
+    if (!pad || pad.mapping !== "standard" || pad.axes.length < 4 ||
+        pad.buttons.length < 16) return;
+    const container = gamepadsByIndex[pad.index]?.elem;
+    if (!container) return;
+    const paintStick = (id, baseX, baseY, axisX, axisY) => {
+      const element = container.querySelector("#" + id);
+      if (!element) return;
+      const x = Number.isFinite(pad.axes[axisX]) ? pad.axes[axisX] : 0;
+      const y = Number.isFinite(pad.axes[axisY]) ? pad.axes[axisY] : 0;
+      element.setAttribute("cx", baseX + x * 10.5);
+      element.setAttribute("cy", baseY + y * 10.5);
+      element.setAttribute("fill", "rgba(0,0,0," +
+        Math.min(1, Math.max(Math.abs(x), Math.abs(y))) + ")");
+    };
+    paintStick("LeftStick", 113, 160, 0, 1);
+    paintStick("RightStick", 278, 238, 2, 3);
+    const buttons = {
+      L2:6, R2:7, L1:4, R1:5,
+      DUp:12, DDown:13, DLeft:14, DRight:15,
+      BTop:3, BBottom:0, BLeft:2, BRight:1, LMeta:8, RMeta:9
+    };
+    Object.entries(buttons).forEach(([id, index]) => {
+      const element = container.querySelector("#" + id);
+      const value = pad.buttons[index]?.value || 0;
+      if (element) {
+        element.setAttribute("fill", "rgba(0,0,0," +
+          Math.min(1, Math.max(0, value)) + ")");
+      }
     });
-
-    window.addEventListener('gamepaddisconnected', function() {
-      document.getElementById('running').innerText = 'Gamepad Disconnected';
-    });
+  }
 </script>
 
 
@@ -824,90 +827,38 @@ requestAnimationFrame(process);
 
 
 <script>
-      let gamepadConnected = false;
+  async function playGamepadEffect(effect, motor, gamepadIndex) {
+    if (typeof navigator.getGamepads !== "function") return;
+    const index = gamepadIndex === undefined ? null : Number(gamepadIndex);
+    const pad = Number.isInteger(index) ? navigator.getGamepads()[index] : getActiveGamepad();
+    const actuator = pad?.vibrationActuator ||
+      (pad?.hapticActuators && pad.hapticActuators[0]);
+    if (!actuator || typeof actuator.playEffect !== "function") {
+      alert("Este navegador/control no ofrece vibración desde la Gamepad API.");
+      return;
+    }
+    const isLeft = motor === "left";
+    const params = effect === "trigger-rumble"
+      ? {startDelay:0, duration:800, leftTrigger:isLeft ? 1 : 0, rightTrigger:isLeft ? 0 : 1}
+      : {startDelay:0, duration:800, strongMagnitude:isLeft ? 1 : 0, weakMagnitude:isLeft ? 0 : 1};
+    try {
+      const status = await actuator.playEffect(effect, params);
+      if (status === "not-supported") alert("Este efecto no está disponible en el controlador.");
+    } catch (error) {
+      console.warn("Vibración no disponible:", error);
+      alert("No se pudo ejecutar la vibración en este dispositivo.");
+    }
+  }
+  function vibrateMotor(motor, gamepadIndex) {
+    return playGamepadEffect("dual-rumble", motor, gamepadIndex);
+  }
+  function vibrateMotorG(motor, gamepadIndex) {
+    return playGamepadEffect("trigger-rumble", motor, gamepadIndex);
+  }
+</script>
 
-      //ETA - Evento para detectar cuando un gamepad se conecta
-      window.addEventListener("gamepadconnected", (event) => {
-          gamepadConnected = true;
-          console.log("Gamepad conectado:", event.gamepad);
-      });
-
-      //ETA - Evento para detectar cuando un gamepad se desconecta
-      window.addEventListener("gamepaddisconnected", () => {
-          gamepadConnected = false;
-          console.log("Gamepad desconectado");
-      });
-
-      // ETA -
-      function vibrateMotor(motor) {
-          if (gamepadConnected) {
-              const gamepad = navigator.getGamepads()[0];
-
-              if (gamepad && gamepad.vibrationActuator) {
-                  const intensity = 1.0;
-                  const duration = 800;
-
-                  if (motor === 'left') {
-                      gamepad.vibrationActuator.playEffect("dual-rumble", {
-                          startDelay: 0,
-                          duration: duration,
-                          weakMagnitude: 0,
-                          strongMagnitude: intensity
-                      });
-                  } else if (motor === 'right') {
-                      gamepad.vibrationActuator.playEffect("dual-rumble", {
-                          startDelay: 0,
-                          duration: duration,
-                          weakMagnitude: intensity,
-                          strongMagnitude: 0
-                      });
-                  }
-              } else {
-                  console.log("ETA . El actuador de vibración no está disponible en este gamepad.");
-              }
-          } else {
-            // #226E93
-              console.log("ETA - No hay ningún gamepad conectado.");
-          }
-      }
-
-      function vibrateMotorG(motor) {
-
-          if (gamepadConnected) {
-              const gamepad = navigator.getGamepads()[0];
-
-              if (gamepad && gamepad.vibrationActuator) {
-                  const intensity = 1.0;
-                  const duration = 800;
-
-                  if (motor === 'left') {
-                      gamepad.vibrationActuator.playEffect("trigger-rumble", {
-                        //ETA- GATILLO IZQUIERDO #226E93
-                          startDelay: 0,
-                          duration: duration,
-                          rightTrigger: 0,
-                          leftTrigger: intensity
-                      });
-                  } else if (motor === 'right') {
-                      gamepad.vibrationActuator.playEffect("trigger-rumble", {
-                        //ETA- GATILLO DERECHO #226E93
-                          startDelay: 0,
-                          duration: duration,
-                          rightTrigger: intensity,
-                          leftTrigger: 0
-                      });
-                  }
-              } else{
-              //#226E93
-                  console.log("DEBUG: El actuador de vibración no está disponible en este gamepad.");
-              }
-          } else {
-              console.log("DEBUG: No hay ningún gamepad conectado.");
-          }
-      }
-
-  </script>
-
+<script src="js/diagnostics-core.js"></script>
+<script src="js/diagnostics-ui.js"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-7KBX46Z8NT"></script>

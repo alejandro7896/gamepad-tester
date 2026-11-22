@@ -1,303 +1,185 @@
-
+<!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-  <title>Osciloscopio de axis</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <title>Osciloscopio de ejes | El Taller de Alex</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <style>
-    #gamepad-tester {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .axesc {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      margin: 0 auto;
-    }
-    canvas {
-      width: 25%;
-      height: 350px; /* Fija la altura de los canvas */
-      max-width: 25%;
-      max-height: 350px;
-    }
-    body{
-      font-family: Lexend,Montserrat;
-    }
-    #trk{
-      cursor:pointer;
-      transition: 0.3s ease;
-    }
-    #trk:hover{
-      background:#818181;
-      color:white;
-    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 10px; color: #183e51; }
+    h2 { color: #226e93; margin: 0 0 10px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 8px; }
+    label { font-size: .9rem; font-weight: 600; }
+    select, button { border-radius: 7px; font: inherit; padding: 7px 10px; }
+    select { max-width: 100%; border: 1px solid #b6cbd5; }
+    button { border: 0; cursor: pointer; background: #226e93; color: #fff; }
+    button:disabled { background: #a4b4bd; cursor: not-allowed; }
+    #osc-status { font-size: .8rem; margin: 7px 0; color: #596e7d; }
+    .charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .chart-wrap { position: relative; height: 175px; min-width: 0; }
+    @media(max-width: 620px) { .charts { grid-template-columns: 1fr; } .chart-wrap { height: 150px; } }
   </style>
 </head>
 <body>
-  <div>
-    <h1>Osciloscopio</h1>
-    <button id="trk" style="border:none;padding:0.4rem;border-radius:0.5rem;" onclick="startTracking()">Comenzar tracking</button>
-    <div style="display:flex; flex-direction:row;" class="axesc">
-      <canvas id="gamepad-chart0"></canvas>
-      <canvas id="gamepad-chart1"></canvas>
-      <canvas id="gamepad-chart2"></canvas>
-      <canvas id="gamepad-chart3"></canvas>
-    </div>
+  <h2>Osciloscopio de ejes</h2>
+  <div class="toolbar">
+    <label for="osc-controller">Control</label>
+    <select id="osc-controller" aria-label="Control para gráficas"></select>
+    <button type="button" id="osc-toggle">Comenzar tracking</button>
+    <button type="button" id="osc-clear">Limpiar</button>
   </div>
-
+  <p id="osc-status" role="status">Conecta un control para visualizar los ejes.</p>
+  <div class="charts">
+    <div class="chart-wrap"><canvas id="gamepad-chart0"></canvas></div>
+    <div class="chart-wrap"><canvas id="gamepad-chart1"></canvas></div>
+    <div class="chart-wrap"><canvas id="gamepad-chart2"></canvas></div>
+    <div class="chart-wrap"><canvas id="gamepad-chart3"></canvas></div>
+  </div>
   <script>
-    let gamepadIndex = null;
-    const axisData0 = [];
-    const axisData1 = [];
-    const axisData2 = [];
-    const axisData3 = [];
-    const canvas0 = document.getElementById('gamepad-chart0');
-    const canvas1 = document.getElementById('gamepad-chart1');
-    const canvas2 = document.getElementById('gamepad-chart2');
-    const canvas3 = document.getElementById('gamepad-chart3');
-    const ctx0 = canvas0.getContext('2d');
-    const ctx1 = canvas1.getContext('2d');
-    const ctx2 = canvas2.getContext('2d');
-    const ctx3 = canvas3.getContext('2d');
+  (function () {
+    "use strict";
+    const select = document.getElementById("osc-controller");
+    const toggle = document.getElementById("osc-toggle");
+    const clear = document.getElementById("osc-clear");
+    const status = document.getElementById("osc-status");
+    const labels = ["LX", "LY", "RX", "RY"];
+    const colors = ["#25978b", "#3550fa", "#c01e3c", "#de7d24"];
+    const charts = [];
+    let tracking = false, selectedIndex = null, knownDevices = "";
+    let frameHandle = null, lastDraw = 0, startTime = 0;
 
-    // Crear las gráficas
-    const gamepadChart0 = new Chart(ctx0, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Axis LX',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          data: [],
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-          },
-          y: {
-            min: -1,
-            max: 1
-          }
-        },
-        animation: {
-          duration: 0 // Sin animación para que sea más rápido
+    function allPads() {
+      return typeof navigator.getGamepads === "function"
+        ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
+    }
+    function selectedPad() {
+      return allPads().find(p => p.index === selectedIndex) || null;
+    }
+    function syncDevices() {
+      const pads = allPads();
+      const key = pads.map(p => p.index + ":" + p.id).join("|");
+      if (key !== knownDevices) {
+        knownDevices = key;
+        select.replaceChildren();
+        for (const pad of pads) {
+          const item = document.createElement("option");
+          item.value = String(pad.index);
+          item.textContent = "[" + pad.index + "] " + pad.id;
+          select.appendChild(item);
         }
+        if (!pads.length) {
+          const item = document.createElement("option");
+          item.value = "";
+          item.textContent = "Sin controles";
+          select.appendChild(item);
+        }
+      }
+      if (!pads.some(p => p.index === selectedIndex)) {
+        stop();
+        selectedIndex = pads.length ? pads[0].index : null;
+      }
+      select.value = selectedIndex === null ? "" : String(selectedIndex);
+      toggle.disabled = !pads.length || !charts.length;
+      select.disabled = !pads.length;
+      if (!pads.length) status.textContent = "Conecta un control y pulsa un botón para activarlo.";
+    }
+    function clearData() {
+      for (const chart of charts) {
+        chart.data.datasets[0].data = [];
+        chart.update("none");
+      }
+      startTime = performance.now();
+    }
+    function stop() {
+      tracking = false;
+      toggle.textContent = "Comenzar tracking";
+      if (frameHandle !== null) cancelAnimationFrame(frameHandle);
+      frameHandle = null;
+    }
+    function sample(now) {
+      if (!tracking) return;
+      frameHandle = requestAnimationFrame(sample);
+      if (document.hidden || now - lastDraw < 32) return; // hasta ~30 Hz
+      lastDraw = now;
+      const pad = selectedPad();
+      if (!pad || !pad.connected) {
+        stop();
+        syncDevices();
+        return;
+      }
+      if (pad.axes.length < 4) {
+        stop();
+        status.textContent = "Este control ofrece menos de cuatro ejes; no se puede representar LX/LY/RX/RY.";
+        return;
+      }
+      const time = (now - startTime) / 1000;
+      charts.forEach((chart, i) => {
+        const data = chart.data.datasets[0].data;
+        data.push({ x: time, y: Number.isFinite(pad.axes[i]) ? pad.axes[i] : 0 });
+        if (data.length > 100) data.shift();
+        chart.update("none");
+      });
+      status.textContent = "Graficando " + pad.id + " · últimos 100 puntos por eje.";
+    }
+    function start() {
+      const pad = selectedPad();
+      if (!pad || pad.axes.length < 4 || !charts.length) {
+        status.textContent = "No hay un control compatible o no se pudo cargar Chart.js.";
+        return;
+      }
+      stop();
+      clearData();
+      tracking = true;
+      toggle.textContent = "Detener tracking";
+      lastDraw = 0;
+      frameHandle = requestAnimationFrame(sample);
+    }
+    if (typeof Chart === "function") {
+      labels.forEach((name, index) => {
+        charts.push(new Chart(document.getElementById("gamepad-chart" + index), {
+          type: "line",
+          data: { datasets: [{label: "Eje " + name, data: [], borderColor: colors[index],
+            borderWidth: 1.5, pointRadius: 0, tension: 0}] },
+          options: {
+            responsive: true, maintainAspectRatio: false, animation: false, parsing: false,
+            plugins: { legend: { display: true } },
+            scales: { x: { type: "linear", title: {display: true, text: "Tiempo (s)"} },
+              y: { min: -1, max: 1 } }
+          }
+        }));
+      });
+    } else {
+      status.textContent = "No se pudo cargar Chart.js; verifica la conexión a Internet.";
+    }
+    toggle.addEventListener("click", () => tracking ? stop() : start());
+    clear.addEventListener("click", () => { stop(); clearData(); });
+    select.addEventListener("change", () => {
+      stop();
+      selectedIndex = select.value === "" ? null : Number(select.value);
+      clearData();
+    });
+    window.addEventListener("message", event => {
+      if (event.origin !== location.origin ||
+          event.data?.type !== "gamepad-selection" ||
+          !Number.isInteger(event.data.index)) return;
+      if (allPads().some(p => p.index === event.data.index)) {
+        stop();
+        selectedIndex = event.data.index;
+        clearData();
+        syncDevices();
       }
     });
-    const gamepadChart1 = new Chart(ctx1, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Axis LY',
-          borderColor: 'rgba(53, 80, 250, 1)',
-          data: [],
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-          },
-          y: {
-            min: -1,
-            max: 1
-          }
-        },
-        animation: {
-          duration: 0 // Sin animación para que sea más rápido
-        }
-      }
-    });
-    const gamepadChart2 = new Chart(ctx2, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Axis RX',
-          borderColor: 'rgba(192, 30, 60, 1)',
-          data: [],
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-          },
-          y: {
-            min: -1,
-            max: 1
-          }
-        },
-        animation: {
-          duration: 0 // Sin animación para que sea más rápido
-        }
-      }
-    });
-    const gamepadChart3 = new Chart(ctx3, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Axis RY',
-          borderColor: 'rgba(222, 125, 36, 1)',
-          data: [],
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-          },
-          y: {
-            min: -1,
-            max: 1
-          }
-        },
-        animation: {
-          duration: 0 // Sin animación para que sea más rápido
-        }
-      }
-    });
-
-
-    // Función para iniciar el seguimiento del gamepad
-    function startTracking() {
-      axisData0.length = 0; // Limpiar datos previos
-      axisData1.length = 0; // Limpiar datos previos
-      axisData2.length = 0; // Limpiar datos previos
-      axisData3.length = 0; // Limpiar datos previos
-      clearGraph(); // Limpiar gráfica
-
-      trackGamepad();
-    }
-
-    // Función para rastrear el gamepad
-    function trackGamepad() {
-      const updateGraph = () => {
-        const gamepads = navigator.getGamepads();
-        if (gamepads[gamepadIndex]) {
-          const axisValue0 = gamepads[gamepadIndex].axes[0]; // Eje 0
-          const axisValue1 = gamepads[gamepadIndex].axes[1]; // Eje 1
-          const axisValue2 = gamepads[gamepadIndex].axes[2]; // Eje 2
-          const axisValue3 = gamepads[gamepadIndex].axes[3]; // Eje 3
-
-          // Almacenar el valor del eje sin tiempo
-          axisData0.push(axisValue0);
-          axisData1.push(axisValue1);
-          axisData2.push(axisValue2);
-          axisData3.push(axisValue3);
-
-          // Limitar los puntos a 100 para evitar que la gráfica se llene
-          if (axisData0.length > 100) {
-            axisData0.shift();
-          }
-          if (axisData1.length > 100) {
-            axisData1.shift();
-          }
-          if (axisData2.length > 100) {
-            axisData2.shift();
-          }
-          if (axisData3.length > 100) {
-            axisData3.shift();
-          }
-
-          // Actualizar la gráfica con los nuevos datos
-          updateGraphData();
-        }
-        requestAnimationFrame(updateGraph);
-      };
-
-      if (!gamepadIndex) {
-        window.addEventListener('gamepadconnected', (e) => {
-          gamepadIndex = e.gamepad.index;
-          updateGraph();
-        });
-      } else {
-        updateGraph();
-      }
-    }
-
-    // Función para actualizar la gráfica
-    function updateGraphData() {
-      gamepadChart0.data.labels = Array.from({ length: axisData0.length }, (_, i) => i);
-      gamepadChart0.data.datasets[0].data = axisData0;
-      gamepadChart0.update();
-
-      gamepadChart1.data.labels = Array.from({ length: axisData1.length }, (_, i) => i);
-      gamepadChart1.data.datasets[0].data = axisData1;
-      gamepadChart1.update();
-
-      gamepadChart2.data.labels = Array.from({ length: axisData2.length }, (_, i) => i);
-      gamepadChart2.data.datasets[0].data = axisData2;
-      gamepadChart2.update();
-
-      gamepadChart3.data.labels = Array.from({ length: axisData3.length }, (_, i) => i);
-      gamepadChart3.data.datasets[0].data = axisData3;
-      gamepadChart3.update();
-    }
-
-    // Función para limpiar la gráfica
-    function clearGraph() {
-      gamepadChart0.data.labels = [];
-      gamepadChart0.data.datasets[0].data = [];
-      gamepadChart0.update();
-
-      gamepadChart1.data.labels = [];
-      gamepadChart1.data.datasets[0].data = [];
-      gamepadChart1.update();
-
-      gamepadChart2.data.labels = [];
-      gamepadChart2.data.datasets[0].data = [];
-      gamepadChart2.update();
-
-      gamepadChart3.data.labels = [];
-      gamepadChart3.data.datasets[0].data = [];
-      gamepadChart3.update();
-    }
+    try {
+      const parentPad = window.parent !== window && window.parent.getActiveGamepad?.();
+      if (parentPad) selectedIndex = parentPad.index;
+    } catch (error) { /* Funcionamiento autónomo si el iframe es externo. */ }
+    window.addEventListener("gamepadconnected", syncDevices);
+    window.addEventListener("gamepaddisconnected", syncDevices);
+    syncDevices();
+    // Algunos navegadores solo exponen el control tras una interacción; comprobar sin duplicar bucles.
+    setInterval(syncDevices, 1000);
+  })();
   </script>
-
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7KBX46Z8NT"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-7KBX46Z8NT');
-  </script>
-
-
-
 </body>
 </html>
