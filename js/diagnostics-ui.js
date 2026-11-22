@@ -67,7 +67,11 @@
       const x = point && standard ? point.x : 0;
       const y = point && standard ? point.y : 0;
       const magnitude = Math.hypot(x, y);
-      const outside = !!(point && standard && magnitude > CENTER_LIMIT);
+      // Verde al centro y también al completar el recorrido (>=99.5% para tolerar redondeos).
+      // La alarma roja sólo se aplica a lecturas intermedias; no diagnostica drift.
+      const fullTravel = !!(point && standard && magnitude >= 0.995);
+      const outside = !!(point && standard &&
+        magnitude > CENTER_LIMIT && !fullTravel);
       card.classList.toggle("diag-outside", outside);
       // El stick llega al borde del SVG sin salir del diagrama cuando X/Y son diagonales.
       const visualScale = magnitude > 1 ? 1 / magnitude : 1;
@@ -81,6 +85,7 @@
         standard && point ? percent(magnitude) : "—";
       const status = find('[data-stick-status="' + side + '"]');
       status.textContent = !standard ? "Mapeo no compatible" :
+        fullTravel ? "Recorrido completo" :
         outside ? "Fuera del 15%" : "Dentro del 15%";
       find('[data-stick-x="' + side + '"]').textContent = standard ? format(x) : "—";
       find('[data-stick-y="' + side + '"]').textContent = standard ? format(y) : "—";
