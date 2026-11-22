@@ -729,33 +729,26 @@ function processController(info) {
   }
   info['timestamp'].textContent = gamepad['timestamp'].toFixed(2);
 
-  try {
-    info['vibration'].textContent = info.gamepad.vibrationActuator.effects;
-    if (!info.gamepad.vibrationActuator.effects.includes("trigger-rumble")) {
-      //ETA. ¿No hay trigger-rumble en el vibrationActuator? Borra el DIV
-    const div = document.getElementById("test-vibG");
-    if (div) {
-        div.remove();
-    }
-}
-} catch (error) {
-    info['vibration'].textContent = "N/A";
-}
-
-try {
-    info['vibtype'].textContent = gamepad.vibrationActuator.constructor.name;
-} catch (error) {
-  //ETA
-    info['vibtype'].textContent = "SIN VIBRACIÓN";
-    document.getElementById("test-vib").style.display = "none";
-}
-
+  const actuator = gamepad.vibrationActuator ||
+    (gamepad.hapticActuators && gamepad.hapticActuators[0]);
+  const effects = Array.isArray(actuator?.effects) ? actuator.effects : null;
+  info.vibration.textContent = actuator
+    ? (effects ? effects.join(", ") : "Disponible; efectos no publicados") : "N/A";
+  info.vibtype.textContent = actuator ? "Actuador detectado" : "SIN VIBRACIÓN";
+  const vibrationControls = elem.querySelector(".test-vib");
+  if (vibrationControls) vibrationControls.style.display =
+    actuator && typeof actuator.playEffect === "function" ? "" : "none";
+  const triggerControls = elem.querySelector(".test-vibG");
+  if (triggerControls) triggerControls.style.display =
+    effects && effects.includes("trigger-rumble") ? "" : "none";
 
   axes.forEach(({axis, value}, ndx) => {
     const off = ndx * 2;
-    axis.setAttributeNS(null, 'cx', gamepad.axes[off    ] * fudgeFactor);
-    axis.setAttributeNS(null, 'cy', gamepad.axes[off + 1] * fudgeFactor);
-    value.textContent = `${gamepad.axes[off].toFixed(decimalPlaces).padStart(5)},${gamepad.axes[off + 1].toFixed(decimalPlaces).padStart(5)}`;
+    const x = Number.isFinite(gamepad.axes[off]) ? gamepad.axes[off] : 0;
+    const y = Number.isFinite(gamepad.axes[off + 1]) ? gamepad.axes[off + 1] : 0;
+    axis.setAttributeNS(null, "cx", x * fudgeFactor);
+    axis.setAttributeNS(null, "cy", y * fudgeFactor);
+    value.textContent = `${x.toFixed(decimalPlaces)}, ${y.toFixed(decimalPlaces)}`;
   });
   buttons.forEach(({circle, value}, ndx) => {
     const button = gamepad.buttons[ndx];
@@ -794,113 +787,39 @@ requestAnimationFrame(process);
 </script>
 
 <script>
-    function updateGamepadDisplay() {
-      const gamepads = navigator.getGamepads();
-      if (!gamepads) return;
-
-      const gamepad = gamepads[0];
-      if (!gamepad) return;
-
-      // JOYSTICKS - ETA
-      const leftStick = document.getElementById('LeftStick');
-      const rightStick = document.getElementById('RightStick');
-
-      leftStick.setAttribute('cx', 112 + gamepad.axes[0] * 10.5);
-      leftStick.setAttribute('cy', 160 + gamepad.axes[1] * 10.5);
-
-      //ETA - COLOR IZQ
-      const fx = Math.max(Math.abs(gamepad.axes[0]),Math.abs(gamepad.axes[1]));
-      leftStick.setAttribute("fill","rgba(0,0,0,"+fx+")");
-
-      rightStick.setAttribute('cx', 278 + gamepad.axes[2] * 10.5);
-      rightStick.setAttribute('cy', 238 + gamepad.axes[3] * 10.5);
-
-      //ETA - COLOR DER
-      const fD = Math.max(Math.abs(gamepad.axes[2]),Math.abs(gamepad.axes[3]));
-      rightStick.setAttribute("fill","rgba(0,0,0,"+fD+")");
-
-      //ETA - GATILLOS
-      const LT = document.getElementById('L2');
-      LTv = gamepad.buttons[6].value
-      LT.setAttribute('fill',"rgba(1,1,1,"+LTv+")");
-
-      const RT = document.getElementById('R2');
-      RTv = gamepad.buttons[7].value
-      RT.setAttribute('fill',"rgba(1,1,1,"+RTv+")");
-
-      //ETA - BUMPERS
-      const LB = document.getElementById('L1');
-      LBv = gamepad.buttons[4].value
-      LB.setAttribute('fill',"rgba(1,1,1,"+LBv+")");
-
-      const RB = document.getElementById('R1');
-      RBv = gamepad.buttons[5].value
-      RB.setAttribute('fill',"rgba(1,1,1,"+RBv+")");
-
-
-      //ETA - CRUZ DPAD
-      const Up = document.getElementById('DUp');
-      Upv = gamepad.buttons[12].value
-      Up.setAttribute('fill',"rgba(1,1,1,"+Upv+")");
-
-      const Down = document.getElementById('DDown');
-      Downv = gamepad.buttons[13].value
-      Down.setAttribute('fill',"rgba(1,1,1,"+Downv+")");
-
-      const DLeft = document.getElementById('DLeft');
-      DLeftv = gamepad.buttons[14].value
-      DLeft.setAttribute('fill',"rgba(1,1,1,"+DLeftv+")");
-
-      const Dright = document.getElementById('DRight');
-      Drightv = gamepad.buttons[15].value
-      Dright.setAttribute('fill',"rgba(1,1,1,"+Drightv+")");
-
-
-      //ETA - BOTONES
-      const BUp = document.getElementById('BTop');
-      BUpv = gamepad.buttons[3].value
-      BUp.setAttribute('fill',"rgba(1,1,1,"+BUpv+")");
-
-      const BDown = document.getElementById('BBottom');
-      BDownv = gamepad.buttons[0].value
-      BDown.setAttribute('fill',"rgba(1,1,1,"+BDownv+")");
-
-      const BLeft = document.getElementById('BLeft');
-      BLeftv = gamepad.buttons[2].value
-      BLeft.setAttribute('fill',"rgba(1,1,1,"+BLeftv+")");
-
-      const Bright = document.getElementById('BRight');
-      Brightv = gamepad.buttons[1].value
-      Bright.setAttribute('fill',"rgba(1,1,1,"+Brightv+")");
-
-
-
-      //ETA - BOTONES  START OPTIONS
-      const Lmeta = document.getElementById('LMeta');
-      Lmetav = gamepad.buttons[8].value
-      Lmeta.setAttribute('fill',"rgba(1,1,1,"+Lmetav+")");
-
-      const Rmeta = document.getElementById('RMeta');
-      Rmetav = gamepad.buttons[9].value
-      Rmeta.setAttribute('fill',"rgba(1,1,1,"+Rmetav+")");
-
-
-    }
-
-    function gameLoop() {
-      updateGamepadDisplay();
-      requestAnimationFrame(gameLoop);
-    }
-
-    window.addEventListener('gamepadconnected', function() {
-      document.getElementById('running').innerText = 'Gamepad Connected';
-      gamepadConnected = true;
-      gameLoop();
+  // El ciclo principal invoca esta función una sola vez por fotograma.
+  function updateGamepadDisplay() {
+    const pad = getActiveGamepad();
+    if (!pad || pad.mapping !== "standard" || pad.axes.length < 4 ||
+        pad.buttons.length < 16) return;
+    const container = gamepadsByIndex[pad.index]?.elem;
+    if (!container) return;
+    const paintStick = (id, baseX, baseY, axisX, axisY) => {
+      const element = container.querySelector("#" + id);
+      if (!element) return;
+      const x = Number.isFinite(pad.axes[axisX]) ? pad.axes[axisX] : 0;
+      const y = Number.isFinite(pad.axes[axisY]) ? pad.axes[axisY] : 0;
+      element.setAttribute("cx", baseX + x * 10.5);
+      element.setAttribute("cy", baseY + y * 10.5);
+      element.setAttribute("fill", "rgba(0,0,0," +
+        Math.min(1, Math.max(Math.abs(x), Math.abs(y))) + ")");
+    };
+    paintStick("LeftStick", 113, 160, 0, 1);
+    paintStick("RightStick", 278, 238, 2, 3);
+    const buttons = {
+      L2:6, R2:7, L1:4, R1:5,
+      DUp:12, DDown:13, DLeft:14, DRight:15,
+      BTop:3, BBottom:0, BLeft:2, BRight:1, LMeta:8, RMeta:9
+    };
+    Object.entries(buttons).forEach(([id, index]) => {
+      const element = container.querySelector("#" + id);
+      const value = pad.buttons[index]?.value || 0;
+      if (element) {
+        element.setAttribute("fill", "rgba(0,0,0," +
+          Math.min(1, Math.max(0, value)) + ")");
+      }
     });
-
-    window.addEventListener('gamepaddisconnected', function() {
-      document.getElementById('running').innerText = 'Gamepad Disconnected';
-    });
+  }
 </script>
 
 
@@ -908,89 +827,35 @@ requestAnimationFrame(process);
 
 
 <script>
-      let gamepadConnected = false;
-
-      //ETA - Evento para detectar cuando un gamepad se conecta
-      window.addEventListener("gamepadconnected", (event) => {
-          gamepadConnected = true;
-          console.log("Gamepad conectado:", event.gamepad);
-      });
-
-      //ETA - Evento para detectar cuando un gamepad se desconecta
-      window.addEventListener("gamepaddisconnected", () => {
-          gamepadConnected = false;
-          console.log("Gamepad desconectado");
-      });
-
-      // ETA -
-      function vibrateMotor(motor) {
-          if (gamepadConnected) {
-              const gamepad = navigator.getGamepads()[0];
-
-              if (gamepad && gamepad.vibrationActuator) {
-                  const intensity = 1.0;
-                  const duration = 800;
-
-                  if (motor === 'left') {
-                      gamepad.vibrationActuator.playEffect("dual-rumble", {
-                          startDelay: 0,
-                          duration: duration,
-                          weakMagnitude: 0,
-                          strongMagnitude: intensity
-                      });
-                  } else if (motor === 'right') {
-                      gamepad.vibrationActuator.playEffect("dual-rumble", {
-                          startDelay: 0,
-                          duration: duration,
-                          weakMagnitude: intensity,
-                          strongMagnitude: 0
-                      });
-                  }
-              } else {
-                  console.log("ETA . El actuador de vibración no está disponible en este gamepad.");
-              }
-          } else {
-            // #226E93
-              console.log("ETA - No hay ningún gamepad conectado.");
-          }
-      }
-
-      function vibrateMotorG(motor) {
-
-          if (gamepadConnected) {
-              const gamepad = navigator.getGamepads()[0];
-
-              if (gamepad && gamepad.vibrationActuator) {
-                  const intensity = 1.0;
-                  const duration = 800;
-
-                  if (motor === 'left') {
-                      gamepad.vibrationActuator.playEffect("trigger-rumble", {
-                        //ETA- GATILLO IZQUIERDO #226E93
-                          startDelay: 0,
-                          duration: duration,
-                          rightTrigger: 0,
-                          leftTrigger: intensity
-                      });
-                  } else if (motor === 'right') {
-                      gamepad.vibrationActuator.playEffect("trigger-rumble", {
-                        //ETA- GATILLO DERECHO #226E93
-                          startDelay: 0,
-                          duration: duration,
-                          rightTrigger: intensity,
-                          leftTrigger: 0
-                      });
-                  }
-              } else{
-              //#226E93
-                  console.log("DEBUG: El actuador de vibración no está disponible en este gamepad.");
-              }
-          } else {
-              console.log("DEBUG: No hay ningún gamepad conectado.");
-          }
-      }
-
-  </script>
+  async function playGamepadEffect(effect, motor, gamepadIndex) {
+    if (typeof navigator.getGamepads !== "function") return;
+    const index = gamepadIndex === undefined ? null : Number(gamepadIndex);
+    const pad = Number.isInteger(index) ? navigator.getGamepads()[index] : getActiveGamepad();
+    const actuator = pad?.vibrationActuator ||
+      (pad?.hapticActuators && pad.hapticActuators[0]);
+    if (!actuator || typeof actuator.playEffect !== "function") {
+      alert("Este navegador/control no ofrece vibración desde la Gamepad API.");
+      return;
+    }
+    const isLeft = motor === "left";
+    const params = effect === "trigger-rumble"
+      ? {startDelay:0, duration:800, leftTrigger:isLeft ? 1 : 0, rightTrigger:isLeft ? 0 : 1}
+      : {startDelay:0, duration:800, strongMagnitude:isLeft ? 1 : 0, weakMagnitude:isLeft ? 0 : 1};
+    try {
+      const status = await actuator.playEffect(effect, params);
+      if (status === "not-supported") alert("Este efecto no está disponible en el controlador.");
+    } catch (error) {
+      console.warn("Vibración no disponible:", error);
+      alert("No se pudo ejecutar la vibración en este dispositivo.");
+    }
+  }
+  function vibrateMotor(motor, gamepadIndex) {
+    return playGamepadEffect("dual-rumble", motor, gamepadIndex);
+  }
+  function vibrateMotorG(motor, gamepadIndex) {
+    return playGamepadEffect("trigger-rumble", motor, gamepadIndex);
+  }
+</script>
 
 <script src="js/diagnostics-core.js"></script>
 <script src="js/diagnostics-ui.js"></script>
