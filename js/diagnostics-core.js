@@ -11,6 +11,16 @@
   "use strict";
 
   const STICKS = { left: [0, 1], right: [2, 3] };
+  // Índices normalizados de la cruceta según Gamepad API mapping="standard".
+  const DPAD_DIRECTIONS = [
+    { key: "up", index: 12, label: "Arriba", symbol: "↑" },
+    { key: "down", index: 13, label: "Abajo", symbol: "↓" },
+    { key: "left", index: 14, label: "Izquierda", symbol: "←" },
+    { key: "right", index: 15, label: "Derecha", symbol: "→" }
+  ];
+  const DPAD_WINDOW_MS = 1000;
+  const DPAD_ALERT_HZ = 4;
+  const DPAD_MIN_PRESSES = 5;
   const STANDARD_BUTTONS = [
     "A / ✕", "B / ○", "X / □", "Y / △", "LB / L1", "RB / R1",
     "LT / L2", "RT / R2", "Vista / Share", "Menú / Options",
@@ -54,7 +64,9 @@
                 right: { center: null, returnResult: null, travelResult: null } },
       tasks: {},
       buttons: null,
-      triggers: null
+      triggers: null,
+      dpad: { directions: Object.fromEntries(DPAD_DIRECTIONS.map(({key}) =>
+        [key, { lastPressed: false, timestamps: [], presses: 0, alert: null }])) }
     };
   }
   function startCenter(state, side, now) {
@@ -101,8 +113,53 @@
   function stopTriggers(state) {
     if (state.triggers) state.triggers.active = false;
   }
+  function resetDpad(state, pad) {
+    for (const {key, index} of DPAD_DIRECTIONS) {
+      state.dpad.directions[key] = {
+        // Si se reinicia mientras un botón está sostenido, no se crea una pulsación falsa.
+        lastPressed: !!(pad?.buttons?.[index] &&
+          (pad.buttons[index].pressed || finite(pad.buttons[index].value) >= 0.5)),
+        timestamps: [], presses: 0, alert: null
+      };
+    }
+  }
+  function updateDpad(state, pad, now) {
+    if (!supportsStandardMapping(pad) || !Number.isFinite(now) || !state.dpad) return;
+    for (const {key, index} of DPAD_DIRECTIONS) {
+      const direction = state.dpad.directions[key];
+      const button = pad.buttons[index];
+      const pressed = !!(button && (button.pressed || finite(button.value) >= 0.5));
+
+      // Sólo flancos 0→1, no cuenta cada fotograma mientras está sostenido.
+      if (pressed && !direction.lastPressed) {
+        direction.presses++;
+        direction.timestamps.push(now);
+      }
+      direction.lastPressed = pressed;
+
+      // Ventana móvil de un segundo; tamaño acotado por el historial observado.
+      while (direction.timestamps.length &&
+          now - direction.timestamps[0] > DPAD_WINDOW_MS) {
+        direction.timestamps.shift();
+      }
+
+      if (direction.timestamps.length >= DPAD_MIN_PRESSES) {
+        const first = direction.timestamps[0];
+        const last = direction.timestamps[direction.timestamps.length - 1];
+        const elapsed = last - first;
+        const hz = elapsed > 0
+          ? (direction.timestamps.length - 1) * 1000 / elapsed : 0;
+        if (hz > DPAD_ALERT_HZ &&
+            (!direction.alert || hz > direction.alert.hz)) {
+          // Se conserva el pico hasta que el usuario reinicie el monitoreo.
+          direction.alert = {hz, at: now, presses: direction.timestamps.length};
+        }
+      }
+    }
+  }
   function update(state, pad, now) {
     if (!pad || !pad.connected) return;
+    updateDpad(state, pad, now);
     for (const side of Object.keys(STICKS)) {
       const task = state.tasks[side];
       if (!task) continue;
@@ -158,7 +215,8 @@
   }
 
   return {
-    STANDARD_BUTTONS, axisPair, supportsStandardMapping, buttonLabel, stickZone,
+    STANDARD_BUTTONS, DPAD_DIRECTIONS, DPAD_WINDOW_MS, DPAD_ALERT_HZ,
+    axisPair, supportsStandardMapping, buttonLabel, stickZone, resetDpad, updateDpad,
     createState, startCenter, centerStats, startReturn, startTravel, stopTravel,
     startButtons, startTriggers, stopTriggers, update
   };
