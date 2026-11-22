@@ -1,0 +1,25 @@
+name: Gamepad Tester - diagnostics checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feature/stability-and-guided-diagnostics
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostics:
+    name: Node.js unit and syntax checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Configure Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test core and HTML scripts
+        run: node --test tests/*.test.cjs
