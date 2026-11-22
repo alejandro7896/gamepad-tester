@@ -137,3 +137,37 @@ test("el retorno sólo completa dentro del 15% central", () => {
   core.update(state, pad, 1800);
   assert.equal(state.sticks.left.returnResult.reachedCenter, true);
 });
+
+test("semáforo visual verde en reposo y recorrido completo, rojo entre 15% y 100%", () => {
+  assert.equal(core.stickZone(0), "center");
+  assert.equal(core.stickZone(0.15), "center");
+  assert.equal(core.stickZone(0.1501), "outside");
+  assert.equal(core.stickZone(0.5), "outside");
+  assert.equal(core.stickZone(0.99), "outside");
+  assert.equal(core.stickZone(0.995), "full");
+  assert.equal(core.stickZone(1), "full");
+  assert.equal(core.stickZone(Math.SQRT2), "full");
+  assert.equal(core.stickZone(NaN), "unknown");
+});
+
+test("cupón de instructor, estilo redondeado y osciloscopio ligero", () => {
+  const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  assert.match(index, /couponCode=NOVIEMBRE25/);
+  assert.match(index, /utm_campaign=noviembre_2026/);
+  assert.match(index, /test-vibG \.vib-button/);
+  assert.match(index, /class="info test-vib"/);
+  assert.match(index, /class="info test-vibG"/);
+  assert.doesNotMatch(index, /class="test-vibG?" style="background:[^"]+" class="info"/);
+  assert.match(index, /border-radius: 12px/);
+  const ui = fs.readFileSync(path.join(__dirname, "..", "js", "diagnostics-ui.js"), "utf8");
+  assert.match(ui, /core\.stickZone\(magnitude, CENTER_LIMIT\)/);
+  assert.match(ui, /fullTravel \? "Recorrido completo"/);
+  const osc = fs.readFileSync(path.join(__dirname, "..", "osc.html"), "utf8");
+  assert.doesNotMatch(osc, /cdn\.jsdelivr\.net\/npm\/chart\.js/i);
+  assert.doesNotMatch(osc, /chart\.update\(/);
+  assert.match(osc, /const SAMPLE_INTERVAL = 1000 \/ 120/);
+  assert.match(osc, /const DRAW_INTERVAL = 1000 \/ 60/);
+  assert.match(osc, /const MAX_SAMPLES = 300/);
+  assert.match(osc, /cancelAnimationFrame\(frameHandle\)/);
+  assert.match(osc, /getContext\("2d"\)/);
+});

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Osciloscopio de ejes | El Taller de Alex</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body { font-family: system-ui, sans-serif; margin: 10px; color: #183e51; }
@@ -18,6 +17,7 @@
     #osc-status { font-size: .8rem; margin: 7px 0; color: #596e7d; }
     .charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
     .chart-wrap { position: relative; height: 175px; min-width: 0; }
+    canvas { display: block; width: 100%; height: 100%; }
     @media(max-width: 620px) { .charts { grid-template-columns: 1fr; } .chart-wrap { height: 150px; } }
   </style>
 </head>
@@ -31,30 +31,42 @@
   </div>
   <p id="osc-status" role="status">Conecta un control para visualizar los ejes.</p>
   <div class="charts">
-    <div class="chart-wrap"><canvas id="gamepad-chart0"></canvas></div>
-    <div class="chart-wrap"><canvas id="gamepad-chart1"></canvas></div>
-    <div class="chart-wrap"><canvas id="gamepad-chart2"></canvas></div>
-    <div class="chart-wrap"><canvas id="gamepad-chart3"></canvas></div>
+    <div class="chart-wrap"><canvas id="gamepad-chart0" aria-label="Historial del eje LX"></canvas></div>
+    <div class="chart-wrap"><canvas id="gamepad-chart1" aria-label="Historial del eje LY"></canvas></div>
+    <div class="chart-wrap"><canvas id="gamepad-chart2" aria-label="Historial del eje RX"></canvas></div>
+    <div class="chart-wrap"><canvas id="gamepad-chart3" aria-label="Historial del eje RY"></canvas></div>
   </div>
   <script>
   (function () {
     "use strict";
+    // Muestrear en cada fotograma habitual (60 Hz) y dibujar hasta 60 FPS.
+    // Canvas2D evita recalcular los cuatro gráficos Chart.js por cada muestra.
+    const SAMPLE_INTERVAL = 1000 / 120;
+    const DRAW_INTERVAL = 1000 / 60;
+    const HISTORY_SECONDS = 4;
+    const MAX_SAMPLES = 300;
+    const labels = ["LX", "LY", "RX", "RY"];
+    const colors = ["#25978b", "#3550fa", "#c01e3c", "#de7d24"];
     const select = document.getElementById("osc-controller");
     const toggle = document.getElementById("osc-toggle");
     const clear = document.getElementById("osc-clear");
     const status = document.getElementById("osc-status");
-    const labels = ["LX", "LY", "RX", "RY"];
-    const colors = ["#25978b", "#3550fa", "#c01e3c", "#de7d24"];
-    const charts = [];
-    let tracking = false, selectedIndex = null, knownDevices = "";
-    let frameHandle = null, lastDraw = 0, startTime = 0;
+    const canvases = labels.map((_, i) => document.getElementById("gamepad-chart" + i));
+    const contexts = canvases.map(canvas => canvas.getContext("2d"));
+    const records = labels.map(() => []);
+    let tracking = false, selectedIndex = null, knownDevices = null;
+    let frameHandle = null, lastSample = 0, lastDraw = 0, lastStatus = 0;
+    let startedAt = 0;
+    let resizeRequired = true;
 
     function allPads() {
       return typeof navigator.getGamepads === "function"
         ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
     }
     function selectedPad() {
-      return allPads().find(p => p.index === selectedIndex) || null;
+      if (selectedIndex === null) return null;
+      return typeof navigator.getGamepads === "function"
+        ? navigator.getGamepads()[selectedIndex] || null : null;
     }
     function syncDevices() {
       const pads = allPads();
@@ -80,16 +92,99 @@
         selectedIndex = pads.length ? pads[0].index : null;
       }
       select.value = selectedIndex === null ? "" : String(selectedIndex);
-      toggle.disabled = !pads.length || !charts.length;
+      toggle.disabled = !pads.length || contexts.some(ctx => !ctx);
       select.disabled = !pads.length;
       if (!pads.length) status.textContent = "Conecta un control y pulsa un botón para activarlo.";
     }
-    function clearData() {
-      for (const chart of charts) {
-        chart.data.datasets[0].data = [];
-        chart.update("none");
+
+    function prepareCanvas(canvas, ctx) {
+      if (!ctx) return {width: 0, height: 0};
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      if (width < 40 || height < 40) return {width: 0, height: 0};
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const pixelW = Math.round(width * dpr);
+      const pixelH = Math.round(height * dpr);
+      if (resizeRequired || canvas.width !== pixelW || canvas.height !== pixelH) {
+        canvas.width = pixelW;
+        canvas.height = pixelH;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
-      startTime = performance.now();
+      return {width, height};
+    }
+    function drawGraph(index, now) {
+      const ctx = contexts[index], canvas = canvases[index];
+      const {width, height} = prepareCanvas(canvas, ctx);
+      if (!width || !height) return;
+      const left = 31, right = width - 9, top = 22, bottom = height - 21;
+      const plotWidth = Math.max(1, right - left);
+      const plotHeight = Math.max(1, bottom - top);
+      const centerY = (top + bottom) / 2;
+      const xStart = Math.max(0, (now - startedAt) / 1000 - HISTORY_SECONDS);
+      const xEnd = xStart + HISTORY_SECONDS;
+      const mapY = value => centerY - value * plotHeight / 2;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.fillStyle = "#294e60";
+      ctx.fillText("Eje " + labels[index], left, 14);
+
+      // Ejes y cuadrícula ligera; se dibujan directamente, sin cálculos de layout de Chart.js.
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#e7eff3";
+      for (const value of [-1, -0.5, 0, 0.5, 1]) {
+        const y = mapY(value);
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+      }
+      for (let i = 0; i <= 4; i++) {
+        const x = left + plotWidth * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#637c89";
+      ctx.font = "10px system-ui, sans-serif";
+      ctx.fillText("+1", 5, top + 3);
+      ctx.fillText("0", 17, centerY + 3);
+      ctx.fillText("-1", 6, bottom + 3);
+      ctx.fillText("−4s", left, height - 5);
+      ctx.fillText("ahora", Math.max(left, right - 30), height - 5);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(left, top, plotWidth, plotHeight);
+      ctx.clip();
+      ctx.strokeStyle = colors[index];
+      ctx.lineWidth = 1.7;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      const values = records[index];
+      let drawing = false;
+      ctx.beginPath();
+      for (const sample of values) {
+        if (sample.t < xStart || sample.t > xEnd) continue;
+        const x = left + (sample.t - xStart) / HISTORY_SECONDS * plotWidth;
+        const y = mapY(sample.value);
+        if (!drawing) {ctx.moveTo(x, y); drawing = true;}
+        else ctx.lineTo(x, y);
+      }
+      if (drawing) ctx.stroke();
+      ctx.restore();
+    }
+    function drawAll(now) {
+      for (let i = 0; i < labels.length; i++) drawGraph(i, now);
+      resizeRequired = false;
+    }
+    function clearData() {
+      for (const data of records) data.length = 0;
+      startedAt = performance.now();
+      drawAll(startedAt);
     }
     function stop() {
       tracking = false;
@@ -97,11 +192,14 @@
       if (frameHandle !== null) cancelAnimationFrame(frameHandle);
       frameHandle = null;
     }
-    function sample(now) {
+    function loop(now) {
       if (!tracking) return;
-      frameHandle = requestAnimationFrame(sample);
-      if (document.hidden || now - lastDraw < 32) return; // hasta ~30 Hz
-      lastDraw = now;
+      frameHandle = requestAnimationFrame(loop);
+      if (document.hidden) {
+        lastSample = now;
+        lastDraw = now;
+        return;
+      }
       const pad = selectedPad();
       if (!pad || !pad.connected) {
         stop();
@@ -110,58 +208,52 @@
       }
       if (pad.axes.length < 4) {
         stop();
-        status.textContent = "Este control ofrece menos de cuatro ejes; no se puede representar LX/LY/RX/RY.";
+        status.textContent = "Este control ofrece menos de cuatro ejes.";
         return;
       }
-      const time = (now - startTime) / 1000;
-      charts.forEach((chart, i) => {
-        const data = chart.data.datasets[0].data;
-        data.push({ x: time, y: Number.isFinite(pad.axes[i]) ? pad.axes[i] : 0 });
-        if (data.length > 100) data.shift();
-        chart.update("none");
-      });
-      status.textContent = "Graficando " + pad.id + " · últimos 100 puntos por eje.";
+      if (now - lastSample >= SAMPLE_INTERVAL) {
+        lastSample = now;
+        const t = (now - startedAt) / 1000;
+        for (let i = 0; i < 4; i++) {
+          const array = records[i];
+          array.push({ t, value: Number.isFinite(pad.axes[i]) ? pad.axes[i] : 0 });
+          if (array.length > MAX_SAMPLES) array.shift();
+        }
+      }
+      if (now - lastDraw >= DRAW_INTERVAL || resizeRequired) {
+        lastDraw = now;
+        drawAll(now);
+      }
+      if (now - lastStatus > 700) {
+        lastStatus = now;
+        status.textContent = "Leyendo " + pad.id + " · captura fluida · dibujo hasta 60 FPS";
+      }
     }
     function start() {
+      syncDevices();
       const pad = selectedPad();
-      if (!pad || pad.axes.length < 4 || !charts.length) {
-        status.textContent = "No hay un control compatible o no se pudo cargar Chart.js.";
+      if (!pad || pad.axes.length < 4 || contexts.some(ctx => !ctx)) {
+        status.textContent = "Necesitas un control con cuatro ejes y un navegador compatible.";
         return;
       }
       stop();
       clearData();
       tracking = true;
       toggle.textContent = "Detener tracking";
-      lastDraw = 0;
-      frameHandle = requestAnimationFrame(sample);
-    }
-    if (typeof Chart === "function") {
-      labels.forEach((name, index) => {
-        charts.push(new Chart(document.getElementById("gamepad-chart" + index), {
-          type: "line",
-          data: { datasets: [{label: "Eje " + name, data: [], borderColor: colors[index],
-            borderWidth: 1.5, pointRadius: 0, tension: 0}] },
-          options: {
-            responsive: true, maintainAspectRatio: false, animation: false, parsing: false,
-            plugins: { legend: { display: true } },
-            scales: { x: { type: "linear", title: {display: true, text: "Tiempo (s)"} },
-              y: { min: -1, max: 1 } }
-          }
-        }));
-      });
-    } else {
-      status.textContent = "No se pudo cargar Chart.js; verifica la conexión a Internet.";
+      const now = performance.now();
+      lastSample = now - SAMPLE_INTERVAL;
+      lastDraw = now - DRAW_INTERVAL;
+      frameHandle = requestAnimationFrame(loop);
     }
     toggle.addEventListener("click", () => tracking ? stop() : start());
-    clear.addEventListener("click", () => { stop(); clearData(); });
+    clear.addEventListener("click", () => {stop(); clearData();});
     select.addEventListener("change", () => {
       stop();
       selectedIndex = select.value === "" ? null : Number(select.value);
       clearData();
     });
     window.addEventListener("message", event => {
-      if (event.origin !== location.origin ||
-          event.data?.type !== "gamepad-selection" ||
+      if (event.origin !== location.origin || event.data?.type !== "gamepad-selection" ||
           !Number.isInteger(event.data.index)) return;
       if (allPads().some(p => p.index === event.data.index)) {
         stop();
@@ -173,11 +265,25 @@
     try {
       const parentPad = window.parent !== window && window.parent.getActiveGamepad?.();
       if (parentPad) selectedIndex = parentPad.index;
-    } catch (error) { /* Funcionamiento autónomo si el iframe es externo. */ }
+    } catch (error) { /* Iframe externo: se utiliza selección local. */ }
     window.addEventListener("gamepadconnected", syncDevices);
     window.addEventListener("gamepaddisconnected", syncDevices);
+    window.addEventListener("resize", () => {
+      resizeRequired = true;
+      if (!tracking) drawAll(performance.now());
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) resizeRequired = true;
+    });
+    if (typeof ResizeObserver === "function") {
+      const observer = new ResizeObserver(() => {
+        resizeRequired = true;
+        if (!tracking) drawAll(performance.now());
+      });
+      canvases.forEach(canvas => observer.observe(canvas));
+    }
     syncDevices();
-    // Algunos navegadores solo exponen el control tras una interacción; comprobar sin duplicar bucles.
+    drawAll(performance.now());
     setInterval(syncDevices, 1000);
   })();
   </script>

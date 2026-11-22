@@ -24,6 +24,13 @@
   function magnitude(x, y) {
     return Math.hypot(finite(x), finite(y));
   }
+  // Semáforo visual: verde cerca de 0% y al recorrer 100%, rojo en la zona intermedia.
+  // Usamos 99.5% para que el redondeo/ruido digital no deje el extremo en rojo.
+  function stickZone(distance, centerLimit = 0.15, fullThreshold = 0.995) {
+    if (!Number.isFinite(distance) || distance < 0) return "unknown";
+    if (distance >= fullThreshold) return "full";
+    return distance > centerLimit ? "outside" : "center";
+  }
   function axisPair(pad, side) {
     const indices = STICKS[side];
     if (!indices || !pad || !pad.axes ||
@@ -151,7 +158,7 @@
   }
 
   return {
-    STANDARD_BUTTONS, axisPair, supportsStandardMapping, buttonLabel,
+    STANDARD_BUTTONS, axisPair, supportsStandardMapping, buttonLabel, stickZone,
     createState, startCenter, centerStats, startReturn, startTravel, stopTravel,
     startButtons, startTriggers, stopTriggers, update
   };
