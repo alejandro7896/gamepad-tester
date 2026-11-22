@@ -15,6 +15,9 @@
     const empty = panel.querySelector("#diagnostic-empty");
     const tests = panel.querySelector("#diagnostic-tests");
     const buttonsGrid = panel.querySelector("#diagnostic-buttons-grid");
+    const dpadPanel = panel.querySelector("#diagnostic-dpad");
+    const dpadWarning = panel.querySelector("#diagnostic-dpad-warning");
+    const dpadWarningText = panel.querySelector("#diagnostic-dpad-warning-text");
     const sessions = new Map();
     let lastRender = 0;
     let optionsKey = "";
@@ -42,6 +45,11 @@
       if (key !== optionsKey) {
         optionsKey = key;
         selector.replaceChildren();
+        const connected = new Set(pads.map(p => p.index));
+        for (const index of sessions.keys()) {
+          if (!connected.has(index)) sessions.delete(index);
+        }
+        lastButtonsKey = "";
         if (!pads.length) {
           const opt = document.createElement("option");
           opt.value = "";
@@ -191,6 +199,46 @@
         : count === total ? "Todos los botones expuestos respondieron."
         : "Los botones verdes ya fueron detectados.";
     }
+
+    function renderDpad(pad, state) {
+      const compatible = core.supportsStandardMapping(pad);
+      const reset = dpadPanel.querySelector("[data-dpad-reset]");
+      reset.disabled = !compatible;
+      dpadPanel.querySelectorAll(".diag-dpad-key").forEach(key => {
+        key.classList.remove("diag-dpad-pressed", "diag-dpad-alert");
+      });
+      const findings = [];
+      for (const {key, index, label} of core.DPAD_DIRECTIONS) {
+        const data = state.dpad.directions[key];
+        const liveRate = data.timestamps.length >= 2
+          ? (data.timestamps.length - 1) * 1000 /
+            Math.max(1, data.timestamps[data.timestamps.length - 1] - data.timestamps[0])
+          : 0;
+        const rate = compatible ? liveRate.toFixed(1) + " Hz" : "N/D";
+        const tile = dpadPanel.querySelector('.diag-dpad-key[data-direction="' + key + '"]');
+        const row = dpadPanel.querySelector('[data-dpad-row="' + key + '"]');
+        const pressed = compatible && !!(pad.buttons[index]?.pressed ||
+          pad.buttons[index]?.value >= 0.5);
+        const flagged = compatible && !!data.alert;
+        tile.classList.toggle("diag-dpad-pressed", pressed && !flagged);
+        tile.classList.toggle("diag-dpad-alert", flagged);
+        row.classList.toggle("diag-dpad-alert", flagged);
+        dpadPanel.querySelector('[data-dpad-count="' + key + '"]').textContent =
+          compatible ? data.presses + " pulsación" + (data.presses === 1 ? "" : "es") : "N/D";
+        dpadPanel.querySelector('[data-dpad-rate="' + key + '"]').textContent =
+          flagged ? "⚠ " + data.alert.hz.toFixed(1) + " Hz" : rate;
+        dpadPanel.querySelector('[data-dpad-live="' + key + '"]').textContent = rate;
+        if (flagged) findings.push(label + " (" + data.alert.hz.toFixed(1) + " Hz)");
+      }
+      dpadWarning.hidden = findings.length === 0;
+      // La alerta persiste hasta Reiniciar, aunque la ventana de medición ya terminó.
+      dpadWarningText.textContent = findings.join(" · ");
+      if (!compatible) {
+        dpadWarning.hidden = true;
+        dpadWarningText.textContent = "";
+      }
+    }
+
     function render(pad, state, now) {
       const standard = core.supportsStandardMapping(pad);
       panel.querySelectorAll("[data-diagnostic-action]").forEach(button => {
@@ -209,6 +257,7 @@
       for (const side of ["left", "right"]) updateStick(side, pad, state, standard, now);
       updateTriggers(pad, state, standard);
       updateButtons(pad, state);
+      renderDpad(pad, state);
       support.textContent = standard
         ? "Mapeo estándar detectado. Datos obtenidos del navegador."
         : "Mapeo no estándar: visualización de ejes y prueba de gatillos no disponibles; botones genéricos disponibles.";
@@ -219,6 +268,16 @@
       }
     });
     panel.addEventListener("click", event => {
+      const resetDpadButton = event.target.closest("[data-dpad-reset]");
+      if (resetDpadButton) {
+        const pad = activePad();
+        if (pad) {
+          const state = sessionFor(pad);
+          core.resetDpad(state, pad);
+          renderDpad(pad, state);
+        }
+        return;
+      }
       const button = event.target.closest("[data-diagnostic-action]");
       if (!button) return;
       const pad = activePad();
@@ -244,15 +303,17 @@
     });
     function tick(now) {
       requestAnimationFrame(tick);
-      if (document.hidden || now - lastRender < 50) return;
+      // Lectura de flancos a frecuencia de pantalla; la UI sólo repinta cada 50 ms.
+      if (document.hidden) return;
+      const pad = activePad();
+      if (pad) core.update(sessionFor(pad), pad, now);
+      if (now - lastRender < 50) return;
       lastRender = now;
-      const pad = syncDevices();
-      empty.hidden = !!pad;
-      tests.hidden = !pad;
-      if (!pad) return;
-      const state = sessionFor(pad);
-      core.update(state, pad, now);
-      render(pad, state, now);
+      const selected = syncDevices();
+      empty.hidden = !!selected;
+      tests.hidden = !selected;
+      if (!selected) return;
+      render(selected, sessionFor(selected), now);
     }
     requestAnimationFrame(tick);
   }
