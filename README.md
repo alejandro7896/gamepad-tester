@@ -44,7 +44,7 @@ index.html
 Desde la página principal puedes seleccionar controles conectados y ejecutar pruebas orientativas:
 
 - **Centro (2 s):** suelta el joystick. Se calcula el promedio X/Y, desplazamiento central, máximo observado y ruido RMS.
-- **Retorno:** lleva el joystick al menos al 70 % de recorrido, suéltalo y mantenlo en la zona central (radio 30 %) durante 500 ms. El intento caduca a los 15 s.
+- **Retorno:** lleva el joystick al menos al 70 % de recorrido, suéltalo y mantenlo en la zona central (radio 15 %) durante 500 ms. El intento caduca a los 15 s.
 - **Recorrido:** mueve el joystick en cuatro direcciones y pulsa «Finalizar recorrido». Se registran máximos direccionales.
 - **Gatillos:** acciona LT/L2 y RT/R2 para registrar máximos y mínimos observados.
 - **Botones:** pulsa cada botón al menos una vez. Los botones de sistema pueden no estar expuestos por el navegador.
@@ -66,3 +66,9 @@ GitHub Actions comprueba los cálculos y la sintaxis del JavaScript, pero no sus
 3. Alterna entre dos y tres decimales. Inicia y detén el osciloscopio varias veces.
 4. Ejecuta mediciones de centro, retorno, recorrido, gatillos y todos los botones.
 5. Verifica motores y vibración de gatillos solamente en dispositivos/navegadores que declaren soporte.
+
+### Pantalla visual en vivo
+
+El diagnóstico guiado se presenta **debajo del tester y el osciloscopio**. Los círculos dibujan los ejes X/Y en tiempo real. El punto y el porcentaje cambian de **verde a rojo cuando la magnitud radial supera el 15 %**, medido como √(X²+Y²). Este cambio de color **no implica automáticamente drift** cuando el joystick se mueve de forma voluntaria; la prueba de centro sirve para observar el reposo. Hay además barras gráficas de gatillos y botones que se iluminan al activarse.
+
+La promoción del curso fue actualizada a noviembre de 2026, usando un enlace al curso con parámetros UTM de campaña. No se muestra un precio o cupón sin confirmar.
