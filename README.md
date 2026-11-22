@@ -69,6 +69,12 @@ GitHub Actions comprueba los cálculos y la sintaxis del JavaScript, pero no sus
 
 ### Pantalla visual en vivo
 
-El diagnóstico guiado se presenta **debajo del tester y el osciloscopio**. Los círculos dibujan los ejes X/Y en tiempo real. El punto y el porcentaje cambian de **verde a rojo cuando la magnitud radial supera el 15 %**, medido como √(X²+Y²). Este cambio de color **no implica automáticamente drift** cuando el joystick se mueve de forma voluntaria; la prueba de centro sirve para observar el reposo. Hay además barras gráficas de gatillos y botones que se iluminan al activarse.
+El diagnóstico guiado se presenta **debajo del tester y el osciloscopio**. Los círculos dibujan los ejes X/Y en tiempo real. El punto y el porcentaje están **verdes hasta el 15 %**, **rojos entre el 15 % y el recorrido completo**, y vuelven a **verde al alcanzar aproximadamente 100 %** (tolerancia desde 99.5 %) de magnitud radial, medida como √(X²+Y²). Este cambio de color **no implica automáticamente drift** cuando el joystick se mueve de forma voluntaria; la prueba de centro sirve para observar el reposo. Hay además barras gráficas de gatillos y botones que se iluminan al activarse.
 
-La promoción del curso fue actualizada a noviembre de 2026, usando un enlace al curso con parámetros UTM de campaña. No se muestra un precio o cupón sin confirmar.
+La promoción de noviembre de 2026 utiliza el cupón de instructor **NOVIEMBRE25**, aplicado directamente en el enlace al curso mediante `couponCode=NOVIEMBRE25`, además de parámetros UTM de campaña. El precio final y la vigencia los determina Udemy.
+
+### Osciloscopio optimizado
+
+El osciloscopio usa ahora **Canvas 2D sin Chart.js**, con historial limitado a 300 muestras y una única función de animación. Captura por fotograma (hasta ~120 Hz si la pantalla y el navegador lo permiten) y dibuja hasta ~60 FPS, evitando cuatro actualizaciones completas de Chart.js por ciclo. Si el navegador reduce los FPS, la frecuencia real también puede reducirse. Hay que validar la fluidez y la selección de dispositivos con un control físico.
+
+Los botones y los contenedores de prueba de vibración conservan bordes redondeados.
