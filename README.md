@@ -71,10 +71,21 @@ GitHub Actions comprueba los cálculos y la sintaxis del JavaScript, pero no sus
 
 El diagnóstico guiado se presenta **debajo del tester y el osciloscopio**. Los círculos dibujan los ejes X/Y en tiempo real. El punto y el porcentaje están **verdes hasta el 15 %**, **rojos entre el 15 % y el recorrido completo**, y vuelven a **verde al alcanzar aproximadamente 100 %** (tolerancia desde 99.5 %) de magnitud radial, medida como √(X²+Y²). Este cambio de color **no implica automáticamente drift** cuando el joystick se mueve de forma voluntaria; la prueba de centro sirve para observar el reposo. Hay además barras gráficas de gatillos y botones que se iluminan al activarse.
 
-La promoción de noviembre de 2026 utiliza el cupón de instructor **NOVIEMBRE25**, aplicado directamente en el enlace al curso mediante `couponCode=NOVIEMBRE25`, además de parámetros UTM de campaña. El precio final y la vigencia los determina Udemy.
+La promoción de noviembre de 2026 utiliza el cupón de instructor **NOVIEMBRE26**, aplicado directamente en el enlace al curso mediante `couponCode=NOVIEMBRE26`, además de parámetros UTM de campaña. El precio final y la vigencia los determina Udemy.
 
 ### Osciloscopio optimizado
 
 El osciloscopio usa ahora **Canvas 2D sin Chart.js**, con historial limitado a 300 muestras y una única función de animación. Captura por fotograma (hasta ~120 Hz si la pantalla y el navegador lo permiten) y dibuja hasta ~60 FPS, evitando cuatro actualizaciones completas de Chart.js por ciclo. Si el navegador reduce los FPS, la frecuencia real también puede reducirse. Hay que validar la fluidez y la selección de dispositivos con un control físico.
 
 Los botones y los contenedores de prueba de vibración conservan bordes redondeados.
+
+### Cruceta: alerta por pulsaciones repetidas
+
+El panel de diagnóstico incluye un **monitor de la cruceta** para controles con mapeo Gamepad API `standard` (botones 12–15). Observa automáticamente cada dirección (arriba, abajo, izquierda, derecha) utilizando el ciclo de lectura del navegador.
+
+- Cuenta únicamente transiciones reales de **liberado a presionado**; una dirección sostenida durante muchos fotogramas cuenta una sola vez.
+- Usa una ventana móvil de 1 segundo: **5 o más pulsaciones** y frecuencia calculada **superior a 4 Hz** generan una alerta de **posible cruceta dañada** para esa dirección.
+- La alerta persiste hasta pulsar **Reiniciar prueba**, que borra los contadores y evita contar erróneamente una pulsación que esté sostenida.
+- Las pulsaciones deliberadamente rápidas también pueden activar la alerta. El navegador puede perder rebotes más rápidos que su frecuencia de lectura. Algunos controles representan la cruceta como ejes o POV, no como botones estándar.
+
+**No confirma una falla física**; es una indicación para repetir la prueba sin mover voluntariamente el control. El monitoreo es independiente del checklist manual de todos los botones.

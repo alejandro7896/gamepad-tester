@@ -152,7 +152,10 @@ test("semáforo visual verde en reposo y recorrido completo, rojo entre 15% y 10
 
 test("cupón de instructor, estilo redondeado y osciloscopio ligero", () => {
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-  assert.match(index, /couponCode=NOVIEMBRE25/);
+  assert.match(index, /couponCode=NOVIEMBRE26/);
+  assert.doesNotMatch(index, /NOVIEMBRE25/);
+  assert.match(index, /id="diagnostic-dpad"/);
+  assert.match(index, /data-dpad-reset/);
   assert.match(index, /utm_campaign=noviembre_2026/);
   assert.match(index, /test-vibG \.vib-button/);
   assert.match(index, /class="info test-vib"/);
@@ -170,4 +173,75 @@ test("cupón de instructor, estilo redondeado y osciloscopio ligero", () => {
   assert.match(osc, /const MAX_SAMPLES = 300/);
   assert.match(osc, /cancelAnimationFrame\(frameHandle\)/);
   assert.match(osc, /getContext\("2d"\)/);
+});
+
+test("cruceta: una pulsación sostenida cuenta una vez, no múltiples fotogramas", () => {
+  const pad = makePad();
+  const state = core.createState(pad);
+  pad.buttons[12].pressed = true;
+  for (let t = 0; t <= 900; t += 10) core.update(state, pad, t);
+  assert.equal(state.dpad.directions.up.presses, 1);
+  assert.equal(state.dpad.directions.up.alert, null);
+});
+
+test("cruceta: cinco transiciones en menos de un segundo superan 4 Hz y dejan alerta", () => {
+  const pad = makePad();
+  const state = core.createState(pad);
+  for (const t of [0, 190, 380, 570, 760]) {
+    pad.buttons[12].pressed = true;
+    core.update(state, pad, t);
+    pad.buttons[12].pressed = false;
+    core.update(state, pad, t + 20);
+  }
+  const up = state.dpad.directions.up;
+  assert.equal(up.presses, 5);
+  assert.ok(up.alert.hz > 4);
+  assert.equal(up.alert.presses, 5);
+  assert.equal(state.dpad.directions.down.alert, null);
+  core.update(state, pad, 3000);
+  assert.equal(up.timestamps.length, 0); // Ventana móvil caduca
+  assert.ok(up.alert); // Alerta persiste hasta reinicio
+});
+
+test("cruceta: exactamente 4 Hz y pulsaciones espaciadas NO disparan alerta", () => {
+  const pad = makePad();
+  const state = core.createState(pad);
+  for (const t of [0, 250, 500, 750, 1000]) {
+    pad.buttons[15].value = 1;
+    core.update(state, pad, t);
+    pad.buttons[15].value = 0;
+    core.update(state, pad, t + 15);
+  }
+  assert.equal(state.dpad.directions.right.presses, 5);
+  assert.equal(state.dpad.directions.right.alert, null);
+  core.update(state, pad, 2500);
+  assert.equal(state.dpad.directions.right.timestamps.length, 0);
+});
+
+test("cruceta: reiniciar durante un botón sostenido evita falsos nuevos flancos", () => {
+  const pad = makePad();
+  const state = core.createState(pad);
+  pad.buttons[14].pressed = true;
+  core.update(state, pad, 10);
+  core.resetDpad(state, pad);
+  for (let t = 20; t < 250; t += 10) core.update(state, pad, t);
+  assert.equal(state.dpad.directions.left.presses, 0);
+  pad.buttons[14].pressed = false;
+  core.update(state, pad, 260);
+  pad.buttons[14].pressed = true;
+  core.update(state, pad, 280);
+  assert.equal(state.dpad.directions.left.presses, 1);
+});
+
+test("cruceta: deshabilitada con mapeos no estándar", () => {
+  const pad = makePad({mapping: ""});
+  const state = core.createState(pad);
+  for (const t of [0, 100, 200, 300, 400]) {
+    pad.buttons[12].pressed = true;
+    core.update(state, pad, t);
+    pad.buttons[12].pressed = false;
+    core.update(state, pad, t + 10);
+  }
+  assert.equal(state.dpad.directions.up.presses, 0);
+  assert.equal(state.dpad.directions.up.alert, null);
 });
