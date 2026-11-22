@@ -155,6 +155,9 @@ test("cupón de instructor, estilo redondeado y osciloscopio ligero", () => {
   assert.match(index, /couponCode=NOVIEMBRE25/);
   assert.match(index, /utm_campaign=noviembre_2026/);
   assert.match(index, /test-vibG \.vib-button/);
+  assert.match(index, /class="info test-vib"/);
+  assert.match(index, /class="info test-vibG"/);
+  assert.doesNotMatch(index, /class="test-vibG?" style="background:[^"]+" class="info"/);
   assert.match(index, /border-radius: 12px/);
   const ui = fs.readFileSync(path.join(__dirname, "..", "js", "diagnostics-ui.js"), "utf8");
   assert.match(ui, /core\.stickZone\(magnitude, CENTER_LIMIT\)/);
